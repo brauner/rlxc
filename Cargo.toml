@@ -1,7 +1,10 @@
 [package]
 name = "lxc_run"
 version = "0.1.0"
-authors = ["Christian Brauner <christian.brauner@ubuntu.com>"]
+authors = [
+    "Christian Brauner <christian.brauner@ubuntu.com>",
+    "Wolfgang Bumiller <w.bumiller@proxmox.com>",
+]
 
 [dependencies]
 libc = "0.2"
