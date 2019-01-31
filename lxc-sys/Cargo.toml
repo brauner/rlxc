@@ -1,15 +1,11 @@
 [package]
 edition = "2018"
-name = "lxc_run"
+name = "lxc-sys"
 version = "0.1.0"
 authors = [
     "Christian Brauner <christian.brauner@ubuntu.com>",
     "Wolfgang Bumiller <w.bumiller@proxmox.com>",
 ]
-
-[dependencies]
-lxc-sys = { path = "lxc-sys" }
-libc = "0.2"
 
 [build-dependencies]
 bindgen = ">0.42.2"
