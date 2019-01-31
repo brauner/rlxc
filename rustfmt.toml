@@ -1,0 +1,11 @@
+edition = "2018"
+max_width = 80
+newline_style = "Unix"
+format_strings = true
+condense_wildcard_suffixes = true
+#struct_field_align_threshold = 32
+#enum_discrim_align_threshold = 32
+wrap_comments = true
+#report_todo = "Always"
+#report_fixme = "Always"
+#license_template_path
