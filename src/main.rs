@@ -7,6 +7,6 @@ fn main() {
         unsafe { lxc_sys::lxc_container_new(name.as_ptr(), path.as_ptr()) };
     unsafe {
         (*container).daemonize = true;
-        //container.is_running(container);
+        (*container).is_running.unwrap()(container);
     }
 }
