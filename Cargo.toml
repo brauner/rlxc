@@ -10,6 +10,7 @@ authors = [
 [dependencies]
 lxc-sys = { path = "lxc-sys" }
 libc = "0.2"
+clap = "2.32.0"
 
 [build-dependencies]
 bindgen = ">0.42.2"

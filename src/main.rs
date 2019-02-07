@@ -1,12 +1,42 @@
 use std::ffi::CString;
+use std::ptr;
+extern crate clap;
+use clap::{App, Arg};
 
 fn main() {
-    let name = CString::new("c1").unwrap();
-    let path = CString::new("/home/brauner/.local/share/lxc").unwrap();
+    let matches = App::new("lxc-run")
+        .version("0.1")
+        .author(clap::crate_authors!("\n"))
+        .about("Run LXC containers")
+        .arg(
+            Arg::with_name("name")
+                .short("n")
+                .long("name")
+                .help("Name of the container")
+                .takes_value(true)
+                .required(true),
+        )
+        .arg(
+            Arg::with_name("path")
+                .short("p")
+                .long("path")
+                .help("Path of the container")
+                .takes_value(true)
+                .required(false),
+        )
+        .get_matches();
+
+    let sname = matches.value_of("name").unwrap();
+    let spath = matches
+        .value_of("path")
+        .unwrap_or("/home/brauner/.local/share/lxc");
+    let cname = CString::new(sname).unwrap();
+    let cpath = CString::new(spath).unwrap();
     let container =
-        unsafe { lxc_sys::lxc_container_new(name.as_ptr(), path.as_ptr()) };
+        unsafe { lxc_sys::lxc_container_new(cname.as_ptr(), cpath.as_ptr()) };
     unsafe {
         (*container).daemonize = true;
+        (*container).start.unwrap()(container, 0, ptr::null());
         (*container).is_running.unwrap()(container);
     }
 }
