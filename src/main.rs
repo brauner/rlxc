@@ -1,5 +1,3 @@
-extern crate clap;
-
 use std::ffi::CString;
 use std::ptr;
 
