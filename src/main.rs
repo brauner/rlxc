@@ -2,30 +2,10 @@ use std::ffi::CString;
 use std::ptr;
 use std::os::unix::ffi::OsStringExt;
 
-use clap::{App, Arg};
+mod cli;
 
 fn main() {
-    let matches = App::new("lxc-run")
-        .version("0.1")
-        .author(clap::crate_authors!("\n"))
-        .about("Run LXC containers")
-        .arg(
-            Arg::with_name("name")
-                .short("n")
-                .long("name")
-                .help("Name of the container")
-                .takes_value(true)
-                .required(true),
-        )
-        .arg(
-            Arg::with_name("path")
-                .short("p")
-                .long("path")
-                .help("Path of the container")
-                .takes_value(true)
-                .required(false),
-        )
-        .get_matches();
+    let matches = cli::build_cli().get_matches();
 
     let sname = matches.value_of("name").unwrap();
     let cpath = matches
