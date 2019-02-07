@@ -1,6 +1,8 @@
+extern crate clap;
+
 use std::ffi::CString;
 use std::ptr;
-extern crate clap;
+
 use clap::{App, Arg};
 
 fn main() {
