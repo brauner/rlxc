@@ -6,9 +6,13 @@ authors = [
     "Christian Brauner <christian.brauner@ubuntu.com>",
     "Wolfgang Bumiller <w.bumiller@proxmox.com>",
 ]
+build = "build.rs"
 
 [dependencies]
 lxc-sys = { path = "lxc-sys" }
 libc = "0.2"
 clap = "2.32"
 xdg = "^2.1"
+
+[build-dependencies]
+clap = "2.32"
