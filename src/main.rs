@@ -1,5 +1,6 @@
 use std::ffi::CString;
 use std::ptr;
+use std::os::unix::ffi::OsStringExt;
 
 use clap::{App, Arg};
 
@@ -27,11 +28,22 @@ fn main() {
         .get_matches();
 
     let sname = matches.value_of("name").unwrap();
-    let spath = matches
+    let cpath = matches
         .value_of("path")
-        .unwrap_or("/home/brauner/.local/share/lxc");
+        .map_or_else(
+            || {
+                CString::new(
+                    xdg::BaseDirectories::with_prefix("lxc")
+                        .unwrap()
+                        .get_data_home()
+                        .into_os_string()
+                        .into_vec(),
+                )
+            },
+            |x| CString::new(x),
+        )
+        .unwrap();
     let cname = CString::new(sname).unwrap();
-    let cpath = CString::new(spath).unwrap();
     let container =
         unsafe { lxc_sys::lxc_container_new(cname.as_ptr(), cpath.as_ptr()) };
     unsafe {
