@@ -28,7 +28,10 @@ fn main() {
         unsafe { lxc_sys::lxc_container_new(cname.as_ptr(), cpath.as_ptr()) };
     unsafe {
         (*container).daemonize = true;
-        (*container).start.unwrap()(container, 0, ptr::null());
-        (*container).is_running.unwrap()(container);
+        let err = (*container).start.unwrap()(container, 0, ptr::null());
+        if !err {
+            lxc_sys::lxc_container_put(container);
+            panic!("Failed to start container {}", sname);
+        }
     }
 }
