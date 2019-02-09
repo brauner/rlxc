@@ -7,10 +7,8 @@ pub fn build_cli() -> App<'static, 'static> {
         .about("Run LXC containers")
         .arg(
             Arg::with_name("name")
-                .short("n")
-                .long("name")
+                .index(1)
                 .help("Name of the container")
-                .takes_value(true)
                 .required(true),
         )
         .arg(
