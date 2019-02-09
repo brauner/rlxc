@@ -19,4 +19,18 @@ pub fn build_cli() -> App<'static, 'static> {
                 .takes_value(true)
                 .required(false),
         )
+        .arg(
+            Arg::with_name("logfile")
+                .long("logfile")
+                .help("Logfile for the container")
+                .takes_value(true)
+                .required(false),
+        )
+        .arg(
+            Arg::with_name("loglevel")
+                .long("loglevel")
+                .help("Loglevel for the container")
+                .takes_value(true)
+                .required(false),
+        )
 }
