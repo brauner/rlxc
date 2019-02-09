@@ -1,6 +1,6 @@
 [package]
 edition = "2018"
-name = "lxc-run"
+name = "rlxc"
 version = "0.1.0"
 authors = [
     "Christian Brauner <christian.brauner@ubuntu.com>",

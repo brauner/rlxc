@@ -11,6 +11,6 @@ fn main() {
     };
 
     let mut app = build_cli();
-    app.gen_completions("lxc-run", Shell::Bash, outdir);
-    //app.gen_completions("lxc-run", Shell::Zsh, outdir);
+    app.gen_completions("rlxc", Shell::Bash, outdir);
+    //app.gen_completions("rlxc", Shell::Zsh, outdir);
 }
