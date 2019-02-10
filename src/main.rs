@@ -53,5 +53,11 @@ fn main() {
                 exit(1);
             }
         }
+    } else if let Some(list) = matches.subcommand_matches("list") {
+        let spath = list.value_of("path").unwrap();
+        if let Err(err) = lxc::list_all_containers(spath) {
+            eprintln!("error: {}", err);
+            exit(1);
+        }
     }
 }

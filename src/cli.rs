@@ -20,7 +20,7 @@ pub fn build_cli() -> App<'static, 'static> {
                         .long("path")
                         .help("Path of the container")
                         .takes_value(true)
-                        .required(false),
+                        .required(true),
                 )
                 .arg(
                     Arg::with_name("logfile")
@@ -52,7 +52,7 @@ pub fn build_cli() -> App<'static, 'static> {
                         .long("path")
                         .help("Path of the container")
                         .takes_value(true)
-                        .required(false),
+                        .required(true),
                 )
                 .arg(
                     Arg::with_name("force")
@@ -61,6 +61,18 @@ pub fn build_cli() -> App<'static, 'static> {
                         .help("SIGKILL the container")
                         .takes_value(false)
                         .required(false),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("list")
+                .about("List LXC containers")
+                .arg(
+                    Arg::with_name("path")
+                        .short("p")
+                        .long("path")
+                        .help("Path of the container")
+                        .takes_value(true)
+                        .required(true),
                 ),
         )
 }
