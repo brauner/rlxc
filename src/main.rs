@@ -9,7 +9,7 @@ fn main() {
         let sname = start.value_of("name").unwrap();
         let spath = start.value_of("path").unwrap();
 
-        let mut container = lxc::Lxc::new(sname, spath);
+        let container = lxc::Lxc::new(sname, spath);
 
         if !container.may_control() {
             eprintln!("error: Insufficient permissions");
@@ -30,7 +30,7 @@ fn main() {
         let spath = stop.value_of("path").unwrap();
         let force = stop.is_present("force");
 
-        let mut container = lxc::Lxc::new(sname, spath);
+        let container = lxc::Lxc::new(sname, spath);
 
         if !container.may_control() {
             eprintln!("error: Insufficient permissions");

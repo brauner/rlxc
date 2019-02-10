@@ -18,7 +18,7 @@ impl Lxc {
         Lxc { handle }
     }
 
-    pub fn start(&mut self, stub: bool) -> Result<(), Error> {
+    pub fn start(&self, stub: bool) -> Result<(), Error> {
         let useinit = if stub { 1 } else { 0 };
         let err = unsafe {
             (*self.handle).start.unwrap()(self.handle, useinit, ptr::null())
@@ -29,19 +29,19 @@ impl Lxc {
         Ok(())
     }
 
-    pub fn shutdown(&mut self, timeout: i32) -> bool {
+    pub fn shutdown(&self, timeout: i32) -> bool {
         unsafe { (*self.handle).shutdown.unwrap()(self.handle, timeout) }
     }
 
-    pub fn stop(&mut self) -> bool {
+    pub fn stop(&self) -> bool {
         unsafe { (*self.handle).stop.unwrap()(self.handle) }
     }
 
-    pub fn may_control(&mut self) -> bool {
+    pub fn may_control(&self) -> bool {
         unsafe { (*self.handle).may_control.unwrap()(self.handle) }
     }
 
-    pub fn is_running(&mut self) -> bool {
+    pub fn is_running(&self) -> bool {
         unsafe { (*self.handle).is_running.unwrap()(self.handle) }
     }
 }
