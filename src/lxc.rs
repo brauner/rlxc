@@ -29,12 +29,21 @@ impl Lxc {
         Ok(())
     }
 
-    pub fn shutdown(&self, timeout: i32) -> bool {
-        unsafe { (*self.handle).shutdown.unwrap()(self.handle, timeout) }
+    pub fn shutdown(&self, timeout: i32) -> Result<(), Error> {
+        let err =
+            unsafe { (*self.handle).shutdown.unwrap()(self.handle, timeout) };
+        if !err {
+            bail!("failed to shutdown container");
+        }
+        Ok(())
     }
 
-    pub fn stop(&self) -> bool {
-        unsafe { (*self.handle).stop.unwrap()(self.handle) }
+    pub fn stop(&self) -> Result<(), Error> {
+        let err = unsafe { (*self.handle).stop.unwrap()(self.handle) };
+        if !err {
+            bail!("failed to start container");
+        }
+        Ok(())
     }
 
     pub fn may_control(&self) -> bool {

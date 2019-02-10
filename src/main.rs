@@ -43,13 +43,13 @@ fn main() {
         }
 
         if !force {
-            if !container.shutdown(-1) {
-                eprintln!("error: Failed to shutdown container");
+            if let Err(err) = container.shutdown(-1) {
+                eprintln!("error: {}", err);
                 exit(1);
             }
         } else {
-            if !container.stop() {
-                eprintln!("error: Failed to shutdown container");
+            if let Err(err) = container.stop() {
+                eprintln!("error: {}", err);
                 exit(1);
             }
         }
