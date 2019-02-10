@@ -28,4 +28,12 @@ impl Lxc {
         }
         Ok(())
     }
+
+    pub fn may_control(&mut self) -> bool {
+        unsafe { (*self.handle).may_control.unwrap()(self.handle) }
+    }
+
+    pub fn is_running(&mut self) -> bool {
+        unsafe { (*self.handle).is_running.unwrap()(self.handle) }
+    }
 }
