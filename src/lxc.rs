@@ -29,6 +29,14 @@ impl Lxc {
         Ok(())
     }
 
+    pub fn shutdown(&mut self, timeout: i32) -> bool {
+        unsafe { (*self.handle).shutdown.unwrap()(self.handle, timeout) }
+    }
+
+    pub fn stop(&mut self) -> bool {
+        unsafe { (*self.handle).stop.unwrap()(self.handle) }
+    }
+
     pub fn may_control(&mut self) -> bool {
         unsafe { (*self.handle).may_control.unwrap()(self.handle) }
     }

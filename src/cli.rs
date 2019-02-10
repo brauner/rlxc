@@ -37,4 +37,30 @@ pub fn build_cli() -> App<'static, 'static> {
                         .required(false),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("stop")
+                .about("Stop LXC containers")
+                .arg(
+                    Arg::with_name("name")
+                        .index(1)
+                        .help("Name of the container")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("path")
+                        .short("p")
+                        .long("path")
+                        .help("Path of the container")
+                        .takes_value(true)
+                        .required(false),
+                )
+                .arg(
+                    Arg::with_name("force")
+                        .short("f")
+                        .long("force")
+                        .help("SIGKILL the container")
+                        .takes_value(false)
+                        .required(false),
+                ),
+        )
 }
