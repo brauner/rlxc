@@ -9,6 +9,7 @@ authors = [
 build = "build.rs"
 
 [dependencies]
+failure = "0.1"
 lxc-sys = { path = "lxc-sys" }
 libc = "0.2"
 clap = "2.32"
