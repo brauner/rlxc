@@ -9,7 +9,7 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of("name").unwrap();
     let spath = args.value_of("path").unwrap();
 
-    let container = lxc::Lxc::new(sname, spath);
+    let container = lxc::Lxc::new(sname, spath)?;
 
     if !container.may_control() {
         bail!("Insufficient permissions");
@@ -27,7 +27,7 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
     let spath = args.value_of("path").unwrap();
     let force = args.is_present("force");
 
-    let container = lxc::Lxc::new(sname, spath);
+    let container = lxc::Lxc::new(sname, spath)?;
 
     if !container.may_control() {
         bail!("Insufficient permissions");

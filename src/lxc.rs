@@ -82,7 +82,7 @@ pub fn get_version() -> String {
 }
 
 impl Lxc {
-    pub fn new(name: &str, path: &str) -> Lxc {
+    pub fn new(name: &str, path: &str) -> Result<Lxc, Error> {
         let cname = CString::new(name).unwrap();
         let cpath = CString::new(path).unwrap();
 
@@ -90,7 +90,11 @@ impl Lxc {
             lxc_sys::lxc_container_new(cname.as_ptr(), cpath.as_ptr())
         };
 
-        Lxc { handle }
+        if handle.is_null() {
+            bail!("failed to allocate new container");
+        }
+
+        Ok(Lxc { handle })
     }
 
     pub fn start(&self, stub: bool) -> Result<(), Error> {
