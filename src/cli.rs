@@ -68,8 +68,7 @@ pub fn build_cli() -> App<'static, 'static> {
                 .about("List LXC containers")
                 .arg(
                     Arg::with_name("path")
-                        .short("p")
-                        .long("path")
+                        .index(1)
                         .help("Path of the container")
                         .takes_value(true)
                         .required(true),
