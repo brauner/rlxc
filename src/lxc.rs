@@ -99,27 +99,27 @@ impl Lxc {
 
     pub fn start(&self, stub: bool) -> Result<(), Error> {
         let useinit = if stub { 1 } else { 0 };
-        let err = unsafe {
+        let started = unsafe {
             (*self.handle).start.unwrap()(self.handle, useinit, ptr::null())
         };
-        if !err {
+        if !started {
             bail!("failed to start container");
         }
         Ok(())
     }
 
     pub fn shutdown(&self, timeout: i32) -> Result<(), Error> {
-        let err =
+        let down =
             unsafe { (*self.handle).shutdown.unwrap()(self.handle, timeout) };
-        if !err {
+        if !down {
             bail!("failed to shutdown container");
         }
         Ok(())
     }
 
     pub fn stop(&self) -> Result<(), Error> {
-        let err = unsafe { (*self.handle).stop.unwrap()(self.handle) };
-        if !err {
+        let stopped = unsafe { (*self.handle).stop.unwrap()(self.handle) };
+        if !stopped {
             bail!("failed to start container");
         }
         Ok(())
