@@ -15,8 +15,8 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Insufficient permissions");
     }
 
-    if !container.is_running() {
-        bail!("Container not running");
+    if container.is_running() {
+        bail!("Container already running");
     }
 
     container.start(false)
