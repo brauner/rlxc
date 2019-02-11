@@ -75,4 +75,15 @@ pub fn build_cli() -> App<'static, 'static> {
                         .required(true),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("version")
+                .about("Show runtime and client version")
+                .arg(
+                    Arg::with_name("version")
+                        .index(1)
+                        .help("Show runtime and client version")
+                        .takes_value(false)
+                        .required(false),
+                ),
+        )
 }

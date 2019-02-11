@@ -1,4 +1,5 @@
 use failure::*;
+use std::ffi::CStr;
 use std::ffi::CString;
 use std::os::raw::c_char;
 use std::ptr;
@@ -71,6 +72,13 @@ pub fn list_all_containers(path: &str) -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+pub fn get_version() -> String {
+    let cstr: &CStr = unsafe { CStr::from_ptr(lxc_sys::lxc_get_version()) };
+
+    let str_slice = cstr.to_str().unwrap_or("unknown");
+    str_slice.to_owned()
 }
 
 impl Lxc {

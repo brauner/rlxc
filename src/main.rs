@@ -64,5 +64,10 @@ fn main() {
             eprintln!("error: {}", err);
             exit(1);
         }
+    } else if matches.subcommand_matches("version").is_some() {
+        let version = lxc::get_version();
+        println!("driver_version: {}", version);
+    } else {
+        println!("{}", matches.usage())
     }
 }
