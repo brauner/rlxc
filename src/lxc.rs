@@ -64,6 +64,10 @@ pub fn list_all_containers(path: &str) -> Result<(), Error> {
         )
     };
 
+    if nr < 0 {
+        bail!("failed to list containers");
+    }
+
     for name in AllocatedStringArrayIter::new(names, nr as usize) {
         match name.to_str() {
             Ok(name) => println!("{}", name),
