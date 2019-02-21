@@ -49,6 +49,29 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
     return container.shutdown(timeout);
 }
 
+fn cmd_exec(args: &clap::ArgMatches) -> i32 {
+    let sname = args.value_of("name").unwrap();
+    let spath = args.value_of("path").unwrap();
+    let vals: Vec<&str> = args.values_of("command").unwrap().collect();
+
+    let container = match lxc::Lxc::new(sname, spath) {
+        Ok(c) => c,
+        Err(_) => return 1,
+    };
+
+    if !container.may_control() {
+        eprintln!("Insufficient permissions");
+        return 1;
+    }
+
+    if !container.is_running() {
+        eprintln!("Container not running");
+        return 1;
+    }
+
+    container.attach_run_wait(vals[0], vals)
+}
+
 fn main() {
     let matches = cli::build_cli().get_matches();
 
@@ -71,6 +94,8 @@ fn main() {
     } else if matches.subcommand_matches("version").is_some() {
         let version = lxc::get_version();
         println!("driver_version: {}", version);
+    } else if let Some(exec) = matches.subcommand_matches("exec") {
+        exit(cmd_exec(exec));
     } else {
         println!("{}", matches.usage())
     }

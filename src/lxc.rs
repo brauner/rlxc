@@ -134,4 +134,24 @@ impl Lxc {
     pub fn is_running(&self) -> bool {
         unsafe { (*self.handle).is_running.unwrap()(self.handle) }
     }
+
+    // int (*attach_run_wait)(struct lxc_container *c, lxc_attach_options_t *options, const char *program, const char * const argv[]);
+    // TODO: Allow to configure attach by providing a wrapper around lxc_attach_options_t.
+    pub fn attach_run_wait(&self, program: &str, argv: Vec<&str>) -> i32 {
+        let cprogram = CString::new(program).unwrap();
+        let cargv: Vec<_> =
+            argv.iter().map(|arg| CString::new(*arg).unwrap()).collect();
+
+        let mut args: Vec<_> = cargv.iter().map(|arg| arg.as_ptr()).collect();
+        args.push(std::ptr::null());
+
+        unsafe {
+            (*self.handle).attach_run_wait.unwrap()(
+                self.handle,
+                ptr::null_mut(),
+                cprogram.as_ptr(),
+                args.as_ptr(),
+            )
+        }
+    }
 }
