@@ -78,11 +78,9 @@ pub fn list_all_containers(path: &str) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn get_version() -> String {
+pub fn get_version() -> &'static str {
     let cstr: &CStr = unsafe { CStr::from_ptr(lxc_sys::lxc_get_version()) };
-
-    let str_slice = cstr.to_str().unwrap_or("unknown");
-    str_slice.to_owned()
+    cstr.to_str().unwrap_or("unknown")
 }
 
 impl Lxc {
