@@ -60,7 +60,17 @@ pub fn build_cli() -> App<'static, 'static> {
                         .long("force")
                         .help("SIGKILL the container")
                         .takes_value(false)
-                        .required(false),
+                        .required(false)
+                        .conflicts_with("timeout"),
+                )
+                .arg(
+                    Arg::with_name("timeout")
+                        .short("t")
+                        .long("timeout")
+                        .help("timeout to wait for the container to stop")
+                        .takes_value(true)
+                        .required(false)
+                        .conflicts_with("force"),
                 ),
         )
         .subcommand(

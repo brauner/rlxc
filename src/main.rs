@@ -26,6 +26,11 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of("name").unwrap();
     let spath = args.value_of("path").unwrap();
     let force = args.is_present("force");
+    let timeout = match args.value_of("timeout").unwrap_or("-1").parse::<i32>()
+    {
+        Ok(n) => n,
+        Err(n) => bail!("Invalid timeout: {:?}", n),
+    };
 
     let container = lxc::Lxc::new(sname, spath)?;
 
@@ -37,11 +42,11 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Container not running");
     }
 
-    if !force {
-        return container.shutdown(-1);
+    if force {
+        return container.stop();
     }
 
-    return container.stop();
+    return container.shutdown(timeout);
 }
 
 fn main() {
