@@ -72,25 +72,29 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
     container.attach_run_wait(vals[0], vals)
 }
 
+fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
+    lxc::list_all_containers(args.value_of("path").unwrap())
+}
+
+fn do_cmd(
+    args: &clap::ArgMatches,
+    func: fn(args: &clap::ArgMatches) -> Result<(), Error>,
+) {
+    if let Err(err) = func(args) {
+        eprintln!("error: {}", err);
+        exit(1);
+    }
+}
+
 fn main() {
     let matches = cli::build_cli().get_matches();
 
-    if let Some(start) = matches.subcommand_matches("start") {
-        if let Err(err) = cmd_start(start) {
-            eprintln!("error: {}", err);
-            exit(1);
-        }
-    } else if let Some(stop) = matches.subcommand_matches("stop") {
-        if let Err(err) = cmd_stop(stop) {
-            eprintln!("error: {}", err);
-            exit(1);
-        }
-    } else if let Some(list) = matches.subcommand_matches("list") {
-        let spath = list.value_of("path").unwrap();
-        if let Err(err) = lxc::list_all_containers(spath) {
-            eprintln!("error: {}", err);
-            exit(1);
-        }
+    if let Some(args) = matches.subcommand_matches("start") {
+        do_cmd(args, cmd_start);
+    } else if let Some(args) = matches.subcommand_matches("stop") {
+        do_cmd(args, cmd_stop);
+    } else if let Some(args) = matches.subcommand_matches("list") {
+        do_cmd(args, cmd_list);
     } else if matches.subcommand_matches("version").is_some() {
         let version = lxc::get_version();
         println!("driver_version: {}", version);
