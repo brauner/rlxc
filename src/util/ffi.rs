@@ -1,3 +1,5 @@
+//! FFI utilities to help communicating with the C library.
+
 use std::ffi::CString;
 use std::os::raw::c_char;
 
@@ -55,5 +57,49 @@ impl std::ops::Deref for CStringVec {
 impl std::ops::DerefMut for CStringVec {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.owned
+    }
+}
+
+/// This iterates over a `char**`, consuming each contained string by returning
+/// it as an owning CString. The pointer holding the list will also be freed in
+/// `drop`.
+pub struct AllocatedStringArrayIter {
+    ptr: *mut *mut c_char,
+    len: usize,
+    at: usize,
+}
+
+impl AllocatedStringArrayIter {
+    pub fn new(ptr: *mut *mut c_char, len: usize) -> Self {
+        Self { ptr, len, at: 0 }
+    }
+}
+
+impl Drop for AllocatedStringArrayIter {
+    fn drop(&mut self) {
+        for i in self.at..self.len {
+            // If the list was consumed these pointers will be NULL and no harm
+            // is done.
+            unsafe {
+                libc::free(self.ptr.add(i) as *mut _);
+            }
+        }
+        unsafe {
+            libc::free(self.ptr as *mut _);
+        }
+    }
+}
+
+impl Iterator for AllocatedStringArrayIter {
+    type Item = CString;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let at = self.at;
+        if at == self.len {
+            None
+        } else {
+            self.at += 1;
+            Some(unsafe { CString::from_raw(*self.ptr.add(at)) })
+        }
     }
 }
