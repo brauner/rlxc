@@ -4,6 +4,7 @@ use failure::*;
 
 mod cli;
 mod lxc;
+mod util;
 
 fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of("name").unwrap();
