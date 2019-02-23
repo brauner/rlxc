@@ -4,8 +4,9 @@
 use failure::*;
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_int};
 use std::ptr;
+use std::time::Duration;
 
 use crate::util::ffi::AllocatedStringArrayIter;
 
@@ -78,7 +79,18 @@ impl Lxc {
     }
 
     /// Atetmpt to shutdown a container with a timeout.
-    pub fn shutdown(&self, timeout: i32) -> Result<(), Error> {
+    pub fn shutdown(&self, timeout: Option<Duration>) -> Result<(), Error> {
+        let timeout: c_int = match timeout {
+            Some(to) => {
+                let secs = to.as_secs();
+                // seconds can be large...
+                if secs > (!(0 as c_int)) as u64 {
+                    bail!("timeout too large");
+                }
+                secs as _
+            }
+            None => -1,
+        };
         let down =
             unsafe { (*self.handle).shutdown.unwrap()(self.handle, timeout) };
         if !down {

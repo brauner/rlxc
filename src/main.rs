@@ -27,10 +27,18 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of("name").unwrap();
     let spath = args.value_of("path").unwrap();
     let force = args.is_present("force");
-    let timeout = match args.value_of("timeout").unwrap_or("-1").parse::<i32>()
-    {
-        Ok(n) => n,
-        Err(n) => bail!("Invalid timeout: {:?}", n),
+    let timeout = match args.value_of("timeout") {
+        None => None,
+        Some(value) => match value.parse::<i32>() {
+            Ok(-1) => None,
+            Ok(n) => {
+                if n < 0 {
+                    bail!("Invalid timeout (must be -1, 0 or positive)");
+                }
+                Some(std::time::Duration::from_secs(n as u64))
+            }
+            Err(e) => bail!("Invalid timeout: {:?}", e),
+        }
     };
 
     let container = lxc::Lxc::new(sname, spath)?;
