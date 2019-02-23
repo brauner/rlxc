@@ -2,7 +2,7 @@ use std::process::exit;
 
 use failure::*;
 
-use rlxc::cli::lxc_run as cli;
+use rlxc::cli::rlxc as cli;
 use rlxc::lxc::{self, Lxc};
 
 fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
