@@ -74,7 +74,13 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
 }
 
 fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
-    lxc::list_all_containers(args.value_of("path").unwrap())
+    for name in lxc::list_all_containers(args.value_of("path").unwrap())? {
+        match name.to_str() {
+            Ok(name) => println!("{}", name),
+            Err(_) => println!("non-utf8 container name: {:?}", name),
+        }
+    }
+    Ok(())
 }
 
 fn do_cmd(

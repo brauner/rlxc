@@ -9,11 +9,17 @@ use crate::util::ffi::AllocatedStringArrayIter;
 mod attach_options;
 pub use attach_options::*;
 
+/// The main container handle. This implements the methods for `struct
+/// lxc_container`.
 pub struct Lxc {
     handle: *mut lxc_sys::lxc_container,
 }
 
-pub fn list_all_containers(path: &str) -> Result<(), Error> {
+/// Get an iterator over all containers defined in the given `path`. This is a
+/// wrapper for liblxc's `list_all_containers` function.
+pub fn list_all_containers(
+    path: &str,
+) -> Result<AllocatedStringArrayIter, Error> {
     let cpath = CString::new(path).unwrap();
     let mut names: *mut *mut c_char = ptr::null_mut();
 
@@ -28,15 +34,7 @@ pub fn list_all_containers(path: &str) -> Result<(), Error> {
     if nr < 0 {
         bail!("failed to list containers");
     }
-
-    for name in AllocatedStringArrayIter::new(names, nr as usize) {
-        match name.to_str() {
-            Ok(name) => println!("{}", name),
-            Err(_) => println!("non-utf8 container name: {:?}", name),
-        }
-    }
-
-    Ok(())
+    Ok(AllocatedStringArrayIter::new(names, nr as usize))
 }
 
 pub fn get_version() -> &'static str {
