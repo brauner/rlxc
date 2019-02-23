@@ -61,6 +61,7 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
     let sname = args.value_of("name").unwrap();
     let spath = args.value_of("path").unwrap();
     let vals: Vec<&str> = args.values_of("command").unwrap().collect();
+    let env: Vec<&str> = args.values_of("env").unwrap().collect();
 
     let container = match Lxc::new(sname, spath) {
         Ok(c) => c,
@@ -78,6 +79,20 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
     }
 
     let mut options = lxc::AttachOptions::new();
+    for e in env {
+        let res: Vec<_> = e.splitn(2, '=').collect();
+        if res.len() != 2 {
+            eprintln!("Invalid environment variable");
+            return 1;
+        }
+        options = match options.set_env_var(res[0], res[1]) {
+            Ok(opt) => opt,
+            Err(_) => {
+                eprintln!("Failed to set environment variable");
+                return 1;
+            }
+        }
+    }
     container.attach_run_wait(&mut options, vals[0], vals)
 }
 

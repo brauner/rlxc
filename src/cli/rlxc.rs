@@ -23,6 +23,15 @@ pub fn build_cli() -> App<'static, 'static> {
                         .required(true),
                 )
                 .arg(
+                    Arg::with_name("env")
+                        .long("env")
+                        .help("Environment variable to set")
+                        .takes_value(true)
+                        .required(false)
+                        .multiple(true)
+                        .number_of_values(1),
+                )
+                .arg(
                     Arg::with_name("command")
                         .index(2)
                         .help("Command to execute")
