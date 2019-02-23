@@ -4,6 +4,9 @@ use std::ffi::CString;
 use std::os::raw::c_char;
 use std::ptr;
 
+mod attach_options;
+pub use attach_options::*;
+
 pub struct Lxc {
     handle: *mut lxc_sys::lxc_container,
 }
