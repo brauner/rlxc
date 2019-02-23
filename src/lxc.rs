@@ -148,10 +148,12 @@ impl Lxc {
         let mut args: Vec<_> = cargv.iter().map(|arg| arg.as_ptr()).collect();
         args.push(std::ptr::null());
 
+        let mut options = AttachOptions::new().set_initial_cwd("/").unwrap();
+
         unsafe {
             (*self.handle).attach_run_wait.unwrap()(
                 self.handle,
-                ptr::null_mut(),
+                options.raw(),
                 cprogram.as_ptr(),
                 args.as_ptr(),
             )
