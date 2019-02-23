@@ -99,6 +99,7 @@ impl Lxc {
         Ok(())
     }
 
+    /// Attempt to stop a running container.
     pub fn stop(&self) -> Result<(), Error> {
         let stopped = unsafe { (*self.handle).stop.unwrap()(self.handle) };
         if !stopped {
@@ -107,16 +108,17 @@ impl Lxc {
         Ok(())
     }
 
+    /// Determine if the caller may control the container.
     pub fn may_control(&self) -> bool {
         unsafe { (*self.handle).may_control.unwrap()(self.handle) }
     }
 
+    /// Determine if the container is running.
     pub fn is_running(&self) -> bool {
         unsafe { (*self.handle).is_running.unwrap()(self.handle) }
     }
 
-    // int (*attach_run_wait)(struct lxc_container *c, lxc_attach_options_t *options, const char *program, const char * const argv[]);
-    // TODO: Allow to configure attach by providing a wrapper around lxc_attach_options_t.
+    /// Try to run a program inside the container.
     pub fn attach_run_wait(&self, program: &str, argv: Vec<&str>) -> i32 {
         let cprogram = CString::new(program).unwrap();
         let cargv: Vec<_> =

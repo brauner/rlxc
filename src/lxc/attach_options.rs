@@ -7,6 +7,7 @@ use std::ptr;
 
 use crate::util::ffi::CStringVec;
 
+/// Type representing options for how to attach to a container.
 pub struct AttachOptions<'t, 'u, 'v, 'w> {
     raw: lxc_sys::lxc_attach_options_t,
     extra_env_vars: CStringVec,
