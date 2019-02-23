@@ -42,7 +42,7 @@ impl<'t, 'u, 'v, 'w> AttachOptions<'t, 'u, 'v, 'w> {
         self.raw.uid = !0;
         self.raw.gid = !0;
         self.raw.env_policy =
-            lxc_sys::lxc_attach_env_policy_t_LXC_ATTACH_KEEP_ENV;
+            lxc_sys::lxc_attach_env_policy_t_LXC_ATTACH_CLEAR_ENV;
         self
     }
 
