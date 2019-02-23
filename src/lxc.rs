@@ -1,3 +1,6 @@
+//! Rust wrapper for `struct lxc_container`. Implements methods to control
+//! containers.
+
 use failure::*;
 use std::ffi::CStr;
 use std::ffi::CString;
@@ -37,12 +40,15 @@ pub fn list_all_containers(
     Ok(AllocatedStringArrayIter::new(names, nr as usize))
 }
 
+/// Returns the currently used liblxc's version string.
 pub fn get_version() -> &'static str {
     let cstr: &CStr = unsafe { CStr::from_ptr(lxc_sys::lxc_get_version()) };
     cstr.to_str().unwrap_or("unknown")
 }
 
 impl Lxc {
+    /// Create a new container handler for the container of the given `name`
+    /// residing under the provided `path`.
     pub fn new(name: &str, path: &str) -> Result<Lxc, Error> {
         let cname = CString::new(name).unwrap();
         let cpath = CString::new(path).unwrap();
@@ -58,6 +64,8 @@ impl Lxc {
         Ok(Lxc { handle })
     }
 
+    /// Attempt to start the container. If `stub` is true, the container's
+    /// `lxc.execute.cmd` is executed instead of `lxc.init.cmd`.
     pub fn start(&self, stub: bool) -> Result<(), Error> {
         let useinit = if stub { 1 } else { 0 };
         let started = unsafe {
@@ -69,6 +77,7 @@ impl Lxc {
         Ok(())
     }
 
+    /// Atetmpt to shutdown a container with a timeout.
     pub fn shutdown(&self, timeout: i32) -> Result<(), Error> {
         let down =
             unsafe { (*self.handle).shutdown.unwrap()(self.handle, timeout) };
