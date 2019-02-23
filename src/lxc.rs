@@ -119,15 +119,18 @@ impl Lxc {
     }
 
     /// Try to run a program inside the container.
-    pub fn attach_run_wait(&self, program: &str, argv: Vec<&str>) -> i32 {
+    pub fn attach_run_wait(
+        &self,
+        options: &mut AttachOptions,
+        program: &str,
+        argv: Vec<&str>,
+    ) -> i32 {
         let cprogram = CString::new(program).unwrap();
         let cargv: Vec<_> =
             argv.iter().map(|arg| CString::new(*arg).unwrap()).collect();
 
         let mut args: Vec<_> = cargv.iter().map(|arg| arg.as_ptr()).collect();
         args.push(std::ptr::null());
-
-        let mut options = AttachOptions::new().set_initial_cwd("/").unwrap();
 
         unsafe {
             (*self.handle).attach_run_wait.unwrap()(

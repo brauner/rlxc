@@ -38,7 +38,7 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
                 Some(std::time::Duration::from_secs(n as u64))
             }
             Err(e) => bail!("Invalid timeout: {:?}", e),
-        }
+        },
     };
 
     let container = lxc::Lxc::new(sname, spath)?;
@@ -78,7 +78,8 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
         return 1;
     }
 
-    container.attach_run_wait(vals[0], vals)
+    let mut options = lxc::AttachOptions::new();
+    container.attach_run_wait(&mut options, vals[0], vals)
 }
 
 fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
