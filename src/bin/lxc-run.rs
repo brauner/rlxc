@@ -2,15 +2,14 @@ use std::process::exit;
 
 use failure::*;
 
-mod cli;
-mod lxc;
-mod util;
+use rlxc::cli::lxc_run as cli;
+use rlxc::lxc::{self, Lxc};
 
 fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of("name").unwrap();
     let spath = args.value_of("path").unwrap();
 
-    let container = lxc::Lxc::new(sname, spath)?;
+    let container = Lxc::new(sname, spath)?;
 
     if !container.may_control() {
         bail!("Insufficient permissions");
@@ -41,7 +40,7 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
         },
     };
 
-    let container = lxc::Lxc::new(sname, spath)?;
+    let container = Lxc::new(sname, spath)?;
 
     if !container.may_control() {
         bail!("Insufficient permissions");
@@ -63,7 +62,7 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
     let spath = args.value_of("path").unwrap();
     let vals: Vec<&str> = args.values_of("command").unwrap().collect();
 
-    let container = match lxc::Lxc::new(sname, spath) {
+    let container = match Lxc::new(sname, spath) {
         Ok(c) => c,
         Err(_) => return 1,
     };

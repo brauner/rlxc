@@ -2,7 +2,7 @@ use std::env;
 
 use clap::Shell;
 
-include!("src/cli.rs");
+include!("src/cli/lxc_run.rs");
 
 fn main() {
     let outdir = match env::var_os("OUT_DIR") {

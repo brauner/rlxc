@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::ffi::{CString, NulError};
 use std::os::raw::{c_char, c_int, c_long};
 use std::os::unix::io::AsRawFd;
