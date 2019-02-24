@@ -8,7 +8,7 @@ use std::os::raw::{c_char, c_int};
 use std::ptr;
 use std::time::Duration;
 
-use crate::util::ffi::AllocatedStringArrayIter;
+use crate::util::ffi::{AllocatedStringArrayIter, ToCString};
 
 mod attach_options;
 pub use attach_options::*;
@@ -21,10 +21,10 @@ pub struct Lxc {
 
 /// Get an iterator over all containers defined in the given `path`. This is a
 /// wrapper for liblxc's `list_all_containers` function.
-pub fn list_all_containers(
-    path: &str,
+pub fn list_all_containers<T: ?Sized + ToCString>(
+    path: &T,
 ) -> Result<AllocatedStringArrayIter, Error> {
-    let cpath = CString::new(path).unwrap();
+    let cpath = path.to_c_string()?;
     let mut names: *mut *mut c_char = ptr::null_mut();
 
     let nr = unsafe {

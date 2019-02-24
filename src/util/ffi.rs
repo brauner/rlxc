@@ -1,7 +1,9 @@
 //! FFI utilities to help communicating with the C library.
 
-use std::ffi::CString;
+use std::borrow::Cow;
+use std::ffi::{CStr, CString, NulError};
 use std::os::raw::c_char;
+use std::os::unix::ffi::OsStrExt;
 
 /// Helper to create a C string array (`char**`) variable with the ownership
 /// still in rust code. The raw version of this will contain a trailing `NULL`
@@ -101,5 +103,84 @@ impl Iterator for AllocatedStringArrayIter {
             self.at += 1;
             Some(unsafe { CString::from_raw(*self.ptr.add(at)) })
         }
+    }
+}
+
+/// Helper trait allowing faster conversion from various string types to
+/// `CStrings`.
+///
+/// Some types in rust don't have convenient conversion paths towards to
+/// `CString` (due to rust methods having to be safe for multiple platforms).
+/// `CString::new` takes a value which is `Into<Vec<u8>>`. When you have a
+/// `Path` you can take it `AsRef<OsStr>` which can provide an `as_bytes()`
+/// method, but only if the `std::os::unix::ffi::OsStrExt` trait is visible.
+///
+/// This trait connects all those missing paths for the most common types. Use
+/// it as:
+///
+/// ```
+/// use rlxc::util::ffi::ToCString;
+///
+/// fn foo<T: ?Sized + ToCString>(path: &T) -> Result<()> {
+///     let cpath = path.to_c_string()?;
+///     unsafe { c_function(cpath.as_ptr()) };
+///     Ok(())
+/// }
+/// ```
+pub trait ToCString {
+    fn to_c_string(&self) -> Result<Cow<CStr>, NulError>;
+}
+
+impl ToCString for CStr {
+    fn to_c_string(&self) -> Result<Cow<CStr>, NulError> {
+        Ok(Cow::Borrowed(self))
+    }
+}
+
+impl ToCString for CString {
+    fn to_c_string(&self) -> Result<Cow<CStr>, NulError> {
+        Ok(Cow::Borrowed(&self))
+    }
+}
+
+impl ToCString for str {
+    fn to_c_string(&self) -> Result<Cow<CStr>, NulError> {
+        Ok(Cow::Owned(CString::new(self)?))
+    }
+}
+
+impl ToCString for [u8] {
+    fn to_c_string(&self) -> Result<Cow<CStr>, NulError> {
+        Ok(Cow::Owned(CString::new(self)?))
+    }
+}
+
+impl ToCString for String {
+    fn to_c_string(&self) -> Result<Cow<CStr>, NulError> {
+        Ok(Cow::Owned(CString::new(self.as_bytes())?))
+    }
+}
+
+impl ToCString for std::ffi::OsStr {
+    fn to_c_string(&self) -> Result<Cow<CStr>, NulError> {
+        Ok(Cow::Owned(CString::new(self.as_bytes())?))
+    }
+}
+
+impl ToCString for std::ffi::OsString {
+    fn to_c_string(&self) -> Result<Cow<CStr>, NulError> {
+        Ok(Cow::Owned(CString::new(self.as_bytes())?))
+    }
+}
+
+impl ToCString for std::path::Path {
+    fn to_c_string(&self) -> Result<Cow<CStr>, NulError> {
+        AsRef::<std::ffi::OsStr>::as_ref(self).to_c_string()
+    }
+}
+
+impl ToCString for std::path::PathBuf {
+    fn to_c_string(&self) -> Result<Cow<CStr>, NulError> {
+        AsRef::<std::ffi::OsStr>::as_ref(self).to_c_string()
     }
 }
