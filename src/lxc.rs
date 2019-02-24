@@ -5,6 +5,7 @@ use failure::*;
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
+use std::path::Path;
 use std::ptr;
 use std::time::Duration;
 
@@ -21,10 +22,10 @@ pub struct Lxc {
 
 /// Get an iterator over all containers defined in the given `path`. This is a
 /// wrapper for liblxc's `list_all_containers` function.
-pub fn list_all_containers<T: ?Sized + ToCString>(
-    path: &T,
+pub fn list_all_containers<T: AsRef<Path>>(
+    path: T,
 ) -> Result<AllocatedStringArrayIter, Error> {
-    let cpath = path.to_c_string()?;
+    let cpath = path.as_ref().to_c_string()?;
     let mut names: *mut *mut c_char = ptr::null_mut();
 
     let nr = unsafe {
