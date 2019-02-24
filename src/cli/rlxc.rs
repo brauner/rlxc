@@ -5,6 +5,15 @@ pub fn build_cli() -> App<'static, 'static> {
         .version("0.1")
         .author(clap::crate_authors!("\n"))
         .about("Run LXC containers")
+        .arg(
+            Arg::with_name("path")
+                .short("p")
+                .long("path")
+                .help("Base path for containers")
+                .global(true)
+                .takes_value(true)
+                .required(false),
+        )
         .subcommand(
             SubCommand::with_name("exec")
                 .about("Execute commands in a container")
@@ -12,14 +21,6 @@ pub fn build_cli() -> App<'static, 'static> {
                     Arg::with_name("name")
                         .index(1)
                         .help("Name of the container")
-                        .required(true),
-                )
-                .arg(
-                    Arg::with_name("path")
-                        .short("p")
-                        .long("path")
-                        .help("Path of the container")
-                        .takes_value(true)
                         .required(true),
                 )
                 .arg(
@@ -50,14 +51,6 @@ pub fn build_cli() -> App<'static, 'static> {
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name("path")
-                        .short("p")
-                        .long("path")
-                        .help("Path of the container")
-                        .takes_value(true)
-                        .required(true),
-                )
-                .arg(
                     Arg::with_name("logfile")
                         .long("logfile")
                         .help("Logfile for the container")
@@ -82,14 +75,6 @@ pub fn build_cli() -> App<'static, 'static> {
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name("path")
-                        .short("p")
-                        .long("path")
-                        .help("Path of the container")
-                        .takes_value(true)
-                        .required(true),
-                )
-                .arg(
                     Arg::with_name("force")
                         .short("f")
                         .long("force")
@@ -110,14 +95,7 @@ pub fn build_cli() -> App<'static, 'static> {
         )
         .subcommand(
             SubCommand::with_name("list")
-                .about("List LXC containers")
-                .arg(
-                    Arg::with_name("path")
-                        .index(1)
-                        .help("Path of the container")
-                        .takes_value(true)
-                        .required(true),
-                ),
+                .about("List LXC containers"),
         )
         .subcommand(
             SubCommand::with_name("version")

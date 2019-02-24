@@ -119,15 +119,25 @@ fn do_cmd(
 fn main() {
     let matches = cli::build_cli().get_matches();
 
+    if matches.subcommand_matches("version").is_some() {
+        let version = lxc::get_version();
+        println!("driver_version: {}", version);
+        return;
+    }
+
+    // All other commands require --path!
+    if matches.value_of("path").is_none() {
+        eprintln!("Missin grequired argument: 'path'");
+        eprintln!("{}", matches.usage());
+        exit(1);
+    }
+
     if let Some(args) = matches.subcommand_matches("start") {
         do_cmd(args, cmd_start);
     } else if let Some(args) = matches.subcommand_matches("stop") {
         do_cmd(args, cmd_stop);
     } else if let Some(args) = matches.subcommand_matches("list") {
         do_cmd(args, cmd_list);
-    } else if matches.subcommand_matches("version").is_some() {
-        let version = lxc::get_version();
-        println!("driver_version: {}", version);
     } else if let Some(exec) = matches.subcommand_matches("exec") {
         exit(cmd_exec(exec));
     } else {
