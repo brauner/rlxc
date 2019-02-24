@@ -93,10 +93,7 @@ pub fn build_cli() -> App<'static, 'static> {
                         .conflicts_with("force"),
                 ),
         )
-        .subcommand(
-            SubCommand::with_name("list")
-                .about("List LXC containers"),
-        )
+        .subcommand(SubCommand::with_name("list").about("List LXC containers"))
         .subcommand(
             SubCommand::with_name("version")
                 .about("Show runtime and client version")

@@ -61,7 +61,10 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
     let sname = args.value_of("name").unwrap();
     let spath = args.value_of("path").unwrap();
     let vals: Vec<&str> = args.values_of("command").unwrap().collect();
-    let env: Vec<&str> = args.values_of("env").unwrap().collect();
+    let mut env: Vec<&str> = Vec::new();
+    if args.is_present("env") {
+        env = args.values_of("env").unwrap().collect();
+    }
 
     let container = match Lxc::new(sname, spath) {
         Ok(c) => c,
