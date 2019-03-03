@@ -134,15 +134,14 @@ fn main() {
         exit(1);
     }
 
-    if let Some(args) = matches.subcommand_matches("start") {
-        do_cmd(args, cmd_start);
-    } else if let Some(args) = matches.subcommand_matches("stop") {
-        do_cmd(args, cmd_stop);
-    } else if let Some(args) = matches.subcommand_matches("list") {
-        do_cmd(args, cmd_list);
-    } else if let Some(exec) = matches.subcommand_matches("exec") {
-        exit(cmd_exec(exec));
-    } else {
-        println!("{}", matches.usage())
+    match matches.subcommand() {
+        ("start", Some(args)) => do_cmd(args, cmd_start),
+        ("stop", Some(args)) => do_cmd(args, cmd_stop),
+        ("list", Some(args)) => do_cmd(args, cmd_list),
+        ("exec", Some(args)) => exit(cmd_exec(args)),
+        _ => {
+            println!("{}", matches.usage());
+            exit(1);
+        }
     }
 }
