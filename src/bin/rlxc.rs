@@ -129,7 +129,7 @@ fn main() {
 
     // All other commands require --path!
     if matches.value_of("path").is_none() {
-        eprintln!("Missin grequired argument: 'path'");
+        eprintln!("Missing required argument: 'path'");
         eprintln!("{}", matches.usage());
         exit(1);
     }
