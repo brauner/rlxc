@@ -48,6 +48,26 @@ pub fn get_version() -> &'static str {
     cstr.to_str().unwrap_or("unknown")
 }
 
+pub fn get_global_config_item(key: &str) -> Result<&'static str, Error> {
+    let ckey = CString::new(key).unwrap();
+    let cstr: &CStr = unsafe {
+        CStr::from_ptr(lxc_sys::lxc_get_global_config_item(ckey.as_ptr()))
+    };
+    if cstr.as_ptr().is_null() {
+        bail!("failed to find value of {}", key);
+    }
+    Ok(cstr.to_str().unwrap())
+}
+
+pub fn get_default_path() -> &'static str {
+    let path = match get_global_config_item("lxc.lxcpath") {
+        Ok(s) => s,
+        Err(_) => return "",
+    };
+
+    path
+}
+
 impl Lxc {
     /// Create a new container handler for the container of the given `name`
     /// residing under the provided `path`.

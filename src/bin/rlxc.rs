@@ -7,7 +7,10 @@ use rlxc::lxc::{self, Lxc};
 
 fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of("name").unwrap();
-    let spath = args.value_of("path").unwrap();
+    let spath = args.value_of("path").unwrap_or(lxc::get_default_path());
+    if spath.is_empty() {
+        bail!("Missing required argument: 'path' and no default path set");
+    }
 
     let container = Lxc::new(sname, spath)?;
 
@@ -24,7 +27,10 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
 
 fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of("name").unwrap();
-    let spath = args.value_of("path").unwrap();
+    let spath = args.value_of("path").unwrap_or(lxc::get_default_path());
+    if spath.is_empty() {
+        bail!("Missing required argument: 'path' and no default path set");
+    }
     let force = args.is_present("force");
     let timeout = match args.value_of("timeout") {
         None => None,
@@ -59,7 +65,11 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
 
 fn cmd_exec(args: &clap::ArgMatches) -> i32 {
     let sname = args.value_of("name").unwrap();
-    let spath = args.value_of("path").unwrap();
+    let spath = args.value_of("path").unwrap_or(lxc::get_default_path());
+    if spath.is_empty() {
+        eprintln!("Missing required argument: 'path' and no default path set");
+        return 1;
+    }
     let vals: Vec<&str> = args.values_of("command").unwrap().collect();
     let env: Vec<&str> = args
         .values_of("env")
@@ -99,7 +109,12 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
 }
 
 fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
-    for name in lxc::list_all_containers(args.value_of("path").unwrap())? {
+    let spath = args.value_of("path").unwrap_or(lxc::get_default_path());
+    if spath.is_empty() {
+        bail!("Missing required argument: 'path' and no default path set");
+    }
+
+    for name in lxc::list_all_containers(spath)? {
         match name.to_str() {
             Ok(name) => println!("{}", name),
             Err(_) => println!("non-utf8 container name: {:?}", name),
@@ -125,13 +140,6 @@ fn main() {
         let version = lxc::get_version();
         println!("driver_version: {}", version);
         return;
-    }
-
-    // All other commands require --path!
-    if matches.value_of("path").is_none() {
-        eprintln!("Missing required argument: 'path'");
-        eprintln!("{}", matches.usage());
-        exit(1);
     }
 
     match matches.subcommand() {
