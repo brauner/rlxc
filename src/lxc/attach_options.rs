@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-2.1+
+
 use std::ffi::{CString, NulError};
 use std::os::raw::{c_char, c_int, c_long};
 use std::os::unix::io::AsRawFd;

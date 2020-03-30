@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-2.1+
+
 //! FFI utilities to help communicating with the C library.
 
 use std::borrow::Cow;

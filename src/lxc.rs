@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-2.1+
+
 //! Rust wrapper for `struct lxc_container`. Implements methods to control
 //! containers.
 

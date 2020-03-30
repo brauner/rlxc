@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-2.1+
+
 use clap::{App, Arg, SubCommand};
 
 pub fn build_cli() -> App<'static, 'static> {
