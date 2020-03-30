@@ -9,7 +9,7 @@ Currently covers:
 - `lxc-stop` -> `rlxc stop`
 - `lxc-ls` -> `rlxc list`
 
-as well ass:
+as well as:
 
 - `rlxc help`
 - `rlxc version`
