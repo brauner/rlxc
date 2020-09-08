@@ -6,6 +6,9 @@ use failure::*;
 
 use rlxc::cli::rlxc as cli;
 use rlxc::lxc::{self, Lxc};
+#[macro_use]
+extern crate prettytable;
+use prettytable::Table;
 
 fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of("name").unwrap();
@@ -116,12 +119,26 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Missing required argument: 'path' and no default path set");
     }
 
+    let mut table = Table::new();
+    table.add_row(row!["NAME", "STATE"]);
     for name in lxc::list_all_containers(spath)? {
-        match name.to_str() {
-            Ok(name) => println!("{}", name),
-            Err(_) => println!("non-utf8 container name: {:?}", name),
+        let sname = match name.to_str() {
+            Ok(name) => name,
+            Err(_) => {
+                eprintln!("non-utf8 container name: {:?}", name);
+                continue;
+            }
+        };
+
+        let container = Lxc::new(sname, spath)?;
+
+        if !container.may_control() {
+            continue;
         }
+
+        table.add_row(row![sname, container.state()]);
     }
+    table.printstd();
     Ok(())
 }
 

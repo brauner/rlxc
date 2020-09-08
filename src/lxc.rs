@@ -164,4 +164,12 @@ impl Lxc {
             )
         }
     }
+
+    /// Determine state of container.
+    pub fn state(&self) -> &'static str {
+        let cstr: &CStr = unsafe {
+            CStr::from_ptr((*self.handle).state.unwrap()(self.handle))
+        };
+        cstr.to_str().unwrap_or("UNKNOWN")
+    }
 }

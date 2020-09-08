@@ -12,8 +12,9 @@ build = "build.rs"
 failure = "0.1"
 lxc-sys = { path = "lxc-sys" }
 libc = "0.2"
-clap = "2.32"
+clap = "2.33.3"
 xdg = "^2.1"
+prettytable-rs = "0.8.0"
 
 [build-dependencies]
 clap = "2.32"
