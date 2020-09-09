@@ -14,7 +14,7 @@ use std::time::Duration;
 use crate::util::ffi::{StringArrayIter, ToCString};
 
 mod attach_options;
-pub use attach_options::*;
+pub use attach_options::AttachOptions;
 
 /// The main container handle. This implements the methods for `struct
 /// lxc_container`.
