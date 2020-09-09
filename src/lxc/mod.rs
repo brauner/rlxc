@@ -3,7 +3,7 @@
 //! Rust wrapper for `struct lxc_container`. Implements methods to control
 //! containers.
 
-use failure::*;
+use anyhow::{bail, Error};
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};

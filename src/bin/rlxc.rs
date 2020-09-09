@@ -2,7 +2,7 @@
 
 use std::process::exit;
 
-use failure::*;
+use anyhow::{bail, Error};
 
 use rlxc::cli::rlxc as cli;
 use rlxc::lxc::{self, Lxc};
