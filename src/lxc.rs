@@ -191,4 +191,58 @@ impl Lxc {
         }
         StringArrayIter::new(names, len)
     }
+
+    /// Get ip addresses of an interface.
+    pub fn get_ipv4<'a, 'b>(&'a self, interface: &str) -> StringArrayIter<'b> {
+        let iface = CString::new(interface).unwrap();
+
+        let mut len = 0;
+        let addresses: *mut *mut c_char = unsafe {
+            (*self.handle).get_ips.unwrap()(
+                self.handle,
+                iface.as_ptr(),
+                CString::new("inet").unwrap().as_ptr(),
+                0,
+            )
+        };
+
+        if addresses != ptr::null_mut() {
+            unsafe {
+                for i in 0.. {
+                    if *addresses.add(i) == ptr::null_mut() {
+                        break;
+                    }
+                    len += 1;
+                }
+            };
+        }
+        StringArrayIter::new(addresses, len)
+    }
+
+    /// Get ip addresses of an interface.
+    pub fn get_ipv6<'a, 'b>(&'a self, interface: &str) -> StringArrayIter<'b> {
+        let iface = CString::new(interface).unwrap();
+
+        let mut len = 0;
+        let addresses: *mut *mut c_char = unsafe {
+            (*self.handle).get_ips.unwrap()(
+                self.handle,
+                iface.as_ptr(),
+                CString::new("inet6").unwrap().as_ptr(),
+                0,
+            )
+        };
+
+        if addresses != ptr::null_mut() {
+            unsafe {
+                for i in 0.. {
+                    if *addresses.add(i) == ptr::null_mut() {
+                        break;
+                    }
+                    len += 1;
+                }
+            };
+        }
+        StringArrayIter::new(addresses, len)
+    }
 }
