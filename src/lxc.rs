@@ -172,4 +172,23 @@ impl Lxc {
         };
         cstr.to_str().unwrap_or("UNKNOWN")
     }
+
+    /// Get network interfaces of container.
+    pub fn get_interfaces<'a, 'b>(&'a self) -> StringArrayIter<'b> {
+        let mut len = 0;
+        let names: *mut *mut c_char =
+            unsafe { (*self.handle).get_interfaces.unwrap()(self.handle) };
+
+        if names != ptr::null_mut() {
+            unsafe {
+                for i in 0.. {
+                    if *names.add(i) == ptr::null_mut() {
+                        break;
+                    }
+                    len += 1;
+                }
+            };
+        }
+        StringArrayIter::new(names, len)
+    }
 }

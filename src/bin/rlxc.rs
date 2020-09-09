@@ -120,7 +120,7 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
     }
 
     let mut table = Table::new();
-    table.add_row(row!["NAME", "STATE"]);
+    table.add_row(row!["NAME", "STATE", "INTERFACES"]);
     for name in lxc::list_all_containers(spath)? {
         let sname = match name.to_str() {
             Ok(name) => name,
@@ -136,7 +136,28 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
             continue;
         }
 
-        table.add_row(row![sname, container.state()]);
+        let mut ifaces = String::new();
+        let interfaces = container.get_interfaces();
+        for interface in interfaces {
+            let iface = match interface.to_str() {
+                Ok(interface) => interface,
+                Err(_) => {
+                    eprintln!("non-utf8 container name: {:?}", interface);
+                    continue;
+                }
+            };
+
+            // skip the loopback device
+            if iface == "lo" {
+                continue;
+            }
+
+            ifaces.push_str(iface);
+            // We're unconditionally appending a newline. This can be done smarter of course.
+            ifaces.push('\n');
+        }
+
+        table.add_row(row![sname, container.state(), ifaces]);
     }
     table.printstd();
     Ok(())
