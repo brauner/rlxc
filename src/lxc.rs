@@ -11,7 +11,7 @@ use std::path::Path;
 use std::ptr;
 use std::time::Duration;
 
-use crate::util::ffi::{AllocatedStringArrayIter, ToCString};
+use crate::util::ffi::{StringArrayIter, ToCString};
 
 mod attach_options;
 pub use attach_options::*;
@@ -24,9 +24,9 @@ pub struct Lxc {
 
 /// Get an iterator over all containers defined in the given `path`. This is a
 /// wrapper for liblxc's `list_all_containers` function.
-pub fn list_all_containers<T: AsRef<Path>>(
+pub fn list_all_containers<'a, T: AsRef<Path>>(
     path: T,
-) -> Result<AllocatedStringArrayIter, Error> {
+) -> Result<StringArrayIter<'a>, Error> {
     let cpath = path.as_ref().to_c_string()?;
     let mut names: *mut *mut c_char = ptr::null_mut();
 
@@ -41,7 +41,7 @@ pub fn list_all_containers<T: AsRef<Path>>(
     if nr < 0 {
         bail!("failed to list containers");
     }
-    Ok(AllocatedStringArrayIter::new(names, nr as usize))
+    Ok(StringArrayIter::new(names, nr as usize))
 }
 
 /// Returns the currently used liblxc's version string.

@@ -4,8 +4,10 @@
 
 use std::borrow::Cow;
 use std::ffi::{CStr, CString, NulError};
+use std::marker::PhantomData;
 use std::os::raw::c_char;
 use std::os::unix::ffi::OsStrExt;
+use std::ptr;
 
 /// Helper to create a C string array (`char**`) variable with the ownership
 /// still in rust code. The raw version of this will contain a trailing `NULL`
@@ -67,43 +69,56 @@ impl std::ops::DerefMut for CStringVec {
 /// This iterates over a `char**`, consuming each contained string by returning
 /// it as an owning CString. The pointer holding the list will also be freed in
 /// `drop`.
-pub struct AllocatedStringArrayIter {
+#[derive(Debug)]
+pub struct StringArrayIter<'a> {
     ptr: *mut *mut c_char,
     len: usize,
     at: usize,
+    _phantom: PhantomData<&'a CStr>,
 }
 
-impl AllocatedStringArrayIter {
-    pub fn new(ptr: *mut *mut c_char, len: usize) -> Self {
-        Self { ptr, len, at: 0 }
-    }
-}
-
-impl Drop for AllocatedStringArrayIter {
-    fn drop(&mut self) {
-        for i in self.at..self.len {
-            // If the list was consumed these pointers will be NULL and no harm
-            // is done.
-            unsafe {
-                libc::free(self.ptr.add(i) as *mut _);
+impl<'a> StringArrayIter<'a> {
+    pub fn new(ptr: *mut *mut c_char, mut len: usize) -> Self {
+        // Try to find any early NULLs.
+        unsafe {
+            for i in 0..len {
+                if *(ptr.add(i)) == ptr::null_mut() {
+                    len = i;
+                    break;
+                }
             }
         }
-        unsafe {
-            libc::free(self.ptr as *mut _);
+        // Construct iterator.
+        Self {
+            ptr,
+            len,
+            at: 0,
+            _phantom: PhantomData,
         }
     }
 }
 
-impl Iterator for AllocatedStringArrayIter {
-    type Item = CString;
+impl<'a> Iterator for StringArrayIter<'a> {
+    type Item = &'a CStr;
 
     fn next(&mut self) -> Option<Self::Item> {
         let at = self.at;
-        if at == self.len {
+        if at >= self.len {
             None
         } else {
             self.at += 1;
-            Some(unsafe { CString::from_raw(*self.ptr.add(at)) })
+            Some(unsafe { CStr::from_ptr(*(self.ptr.add(at))) })
+        }
+    }
+}
+
+impl<'a> Drop for StringArrayIter<'a> {
+    fn drop(&mut self) {
+        unsafe {
+            for i in 0..self.len {
+                libc::free(*self.ptr.add(i) as *mut _);
+            }
+            libc::free(self.ptr as *mut _);
         }
     }
 }
