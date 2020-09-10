@@ -22,6 +22,14 @@ pub struct Lxc {
     handle: *mut lxc_sys::lxc_container,
 }
 
+impl Drop for Lxc {
+    fn drop(&mut self) {
+        unsafe {
+            lxc_sys::lxc_container_put(self.handle);
+        }
+    }
+}
+
 /// Get an iterator over all containers defined in the given `path`. This is a
 /// wrapper for liblxc's `list_all_containers` function.
 pub fn list_all_containers<T: AsRef<Path>>(
