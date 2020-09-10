@@ -122,15 +122,7 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
     let mut table = Table::new();
     table.add_row(row!["NAME", "STATE", "IPV4", "IPV6"]);
     for name in lxc::list_all_containers(spath)? {
-        let sname = match name.to_str() {
-            Ok(name) => name,
-            Err(_) => {
-                eprintln!("non-utf8 container name: {:?}", name);
-                continue;
-            }
-        };
-
-        let container = Lxc::new(sname, spath)?;
+        let container = Lxc::new(&name, spath)?;
 
         if !container.may_control() {
             continue;
@@ -139,70 +131,36 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
         let mut ipv4 = String::new();
         let mut ipv6 = String::new();
         let interfaces = container.get_interfaces();
-        for interface in interfaces {
-            let iface = match interface.to_str() {
-                Ok(interface) => interface,
-                Err(_) => {
-                    eprintln!("non-utf8 interface name: {:?}", interface);
-                    continue;
-                }
-            };
-
+        for iface in interfaces {
             // skip the loopback device
             if iface == "lo" {
                 continue;
             }
 
-            let mut ipv4_addr = String::new();
-            let ipv4_addresses = container.get_ipv4(iface);
+            let ipv4_addresses = container.get_ipv4(&iface);
             for address in ipv4_addresses {
-                let s = match address.to_str() {
-                    Ok(address) => address,
-                    Err(_) => {
-                        eprintln!("non-utf8 address name: {:?}", address);
-                        continue;
-                    }
-                };
-
-                ipv4_addr = s.to_string();
-                // If we have multiple addresses don't bother for now.
-                break;
-            }
-
-            let mut ipv6_addr = String::new();
-            let ipv6_addresses = container.get_ipv6(iface);
-            for address in ipv6_addresses {
-                let s = match address.to_str() {
-                    Ok(address) => address,
-                    Err(_) => {
-                        eprintln!("non-utf8 address name: {:?}", address);
-                        continue;
-                    }
-                };
-
-                ipv6_addr = s.to_string();
-                // If we have multiple addresses don't bother for now.
-                break;
-            }
-
-            if ipv4_addr.len() > 0 {
-                ipv4.push_str(&ipv4_addr);
+                ipv4.push_str(&address);
                 ipv4.push_str(" (");
-                ipv4.push_str(iface);
+                ipv4.push_str(&iface);
                 ipv4.push_str(")");
                 ipv4.push('\n');
+                // If we have multiple addresses don't bother for now.
+                break;
             }
 
-            if ipv6_addr.len() > 0 {
-                ipv6.push_str(&ipv6_addr);
+            let ipv6_addresses = container.get_ipv6(&iface);
+            for address in ipv6_addresses {
+                ipv6.push_str(&address);
                 ipv6.push_str(" (");
-                ipv6.push_str(iface);
+                ipv6.push_str(&iface);
                 ipv6.push_str(")");
                 ipv6.push('\n');
+                // If we have multiple addresses don't bother for now.
+                break;
             }
         }
 
-        table.add_row(row![sname, container.state(), ipv4, ipv6]);
+        table.add_row(row![name, container.state(), ipv4, ipv6]);
     }
     table.printstd();
     Ok(())
