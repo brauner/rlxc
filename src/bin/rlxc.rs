@@ -31,11 +31,21 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
 }
 
 fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
-    let sname = args.value_of("name").unwrap();
+    let mut sname = "";
+    if args.is_present("name") {
+        sname = args.value_of("name").unwrap();
+    }
     let spath = args.value_of("path").unwrap_or(lxc::get_default_path());
     if spath.is_empty() {
         bail!("Missing required argument: 'path' and no default path set");
     }
+
+    let all = args.is_present("all");
+
+    if !all && sname.len() == 0 {
+        bail!("Either a single container or all containers must be stopped");
+    }
+
     let force = args.is_present("force");
     let timeout = match args.value_of("timeout") {
         None => None,
@@ -50,6 +60,32 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
             Err(e) => bail!("Invalid timeout: {:?}", e),
         },
     };
+
+    if all {
+        for name in lxc::list_all_containers(spath)? {
+            let container = Lxc::new(&name, spath)?;
+
+            if !container.may_control() {
+                bail!("Insufficient permissions");
+            }
+
+            if !container.is_running() {
+                println!("Container {:?} not running", name);
+            }
+
+            if force {
+                if let Err(err) = container.stop() {
+                    eprintln!("error: {}", err);
+                }
+            } else {
+                if let Err(err) = container.shutdown(timeout) {
+                    eprintln!("error: {}", err);
+                }
+            }
+        }
+
+        return Ok(());
+    }
 
     let container = Lxc::new(sname, spath)?;
 
