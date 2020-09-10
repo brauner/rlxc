@@ -173,30 +173,15 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
                 continue;
             }
 
-            let ipv4_addresses = container.get_ipv4(&iface);
-            for address in ipv4_addresses {
-                ipv4.push_str(&address);
-                ipv4.push_str(" (");
-                ipv4.push_str(&iface);
-                ipv4.push_str(")");
-                ipv4.push('\n');
-                // If we have multiple addresses don't bother for now.
-                break;
+            for ipv4_addr in container.get_ipv4(&iface) {
+                ipv4.push_str(&format!("{} ({})\n", ipv4_addr, iface));
             }
-
-            let ipv6_addresses = container.get_ipv6(&iface);
-            for address in ipv6_addresses {
-                ipv6.push_str(&address);
-                ipv6.push_str(" (");
-                ipv6.push_str(&iface);
-                ipv6.push_str(")");
-                ipv6.push('\n');
-                // If we have multiple addresses don't bother for now.
-                break;
+            for ipv6_addr in container.get_ipv6(&iface) {
+                ipv6.push_str(&format!("{} ({})\n", ipv6_addr, iface));
             }
         }
 
-        table.add_row(row![name, container.state(), ipv4, ipv6]);
+        table.add_row(row![&name, container.state(), ipv4, ipv6]);
     }
     table.printstd();
     Ok(())
