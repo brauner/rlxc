@@ -100,12 +100,12 @@ impl Iterator for StringArrayIter {
             None
         } else {
             self.at += 1;
-            Some(unsafe {
-                CStr::from_ptr(*(self.ptr.add(at)))
-                    .to_str()
-                    .expect("Invalid string")
-                    .to_owned()
-            })
+            let cstr = unsafe { CStr::from_ptr(*(self.ptr.add(at))) };
+            Some(
+                cstr.to_str()
+                    .expect("liblxc returned non-utf8 string")
+                    .to_string(),
+            )
         }
     }
 }
