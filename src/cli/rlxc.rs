@@ -74,7 +74,7 @@ pub fn build_cli() -> App<'static, 'static> {
                     Arg::with_name("name")
                         .index(1)
                         .help("Name of the container")
-                        .required(true),
+                        .required(false),
                 )
                 .arg(
                     Arg::with_name("force")
@@ -93,6 +93,14 @@ pub fn build_cli() -> App<'static, 'static> {
                         .takes_value(true)
                         .required(false)
                         .conflicts_with("force"),
+                )
+                .arg(
+                    Arg::with_name("all")
+                        .long("all")
+                        .help("stop all containers")
+                        .takes_value(false)
+                        .required(false)
+                        .conflicts_with("name"),
                 ),
         )
         .subcommand(SubCommand::with_name("list").about("List LXC containers"))

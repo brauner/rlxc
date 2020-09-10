@@ -11,7 +11,7 @@ use std::path::Path;
 use std::ptr;
 use std::time::Duration;
 
-use crate::util::ffi::{AllocatedStringArrayIter, ToCString};
+use crate::util::ffi::{StringArrayIter, ToCString};
 
 mod attach_options;
 pub use attach_options::*;
@@ -26,7 +26,7 @@ pub struct Lxc {
 /// wrapper for liblxc's `list_all_containers` function.
 pub fn list_all_containers<T: AsRef<Path>>(
     path: T,
-) -> Result<AllocatedStringArrayIter, Error> {
+) -> Result<StringArrayIter, Error> {
     let cpath = path.as_ref().to_c_string()?;
     let mut names: *mut *mut c_char = ptr::null_mut();
 
@@ -41,7 +41,7 @@ pub fn list_all_containers<T: AsRef<Path>>(
     if nr < 0 {
         bail!("failed to list containers");
     }
-    Ok(AllocatedStringArrayIter::new(names, nr as usize))
+    Ok(StringArrayIter::new(names, nr as usize))
 }
 
 /// Returns the currently used liblxc's version string.
@@ -171,5 +171,82 @@ impl Lxc {
             CStr::from_ptr((*self.handle).state.unwrap()(self.handle))
         };
         cstr.to_str().unwrap_or("UNKNOWN")
+    }
+
+    /// Get network interfaces of container.
+    pub fn get_interfaces(&self) -> StringArrayIter {
+        let mut len = 0;
+        let names: *mut *mut c_char =
+            unsafe { (*self.handle).get_interfaces.unwrap()(self.handle) };
+
+        if names != ptr::null_mut() {
+            unsafe {
+                for i in 0.. {
+                    if *names.add(i) == ptr::null_mut() {
+                        break;
+                    }
+                    len += 1;
+                }
+            };
+        }
+        StringArrayIter::new(names, len)
+    }
+
+    /// Get ip addresses of an interface.
+    pub fn get_ipv4(&self, interface: &str) -> StringArrayIter {
+        let iface = CString::new(interface).unwrap();
+
+        let mut len = 0;
+        let addresses: *mut *mut c_char = unsafe {
+            (*self.handle).get_ips.unwrap()(
+                self.handle,
+                iface.as_ptr(),
+                CString::new("inet").unwrap().as_ptr(),
+                0,
+            )
+        };
+
+        if addresses != ptr::null_mut() {
+            unsafe {
+                for i in 0.. {
+                    if *addresses.add(i) == ptr::null_mut() {
+                        // Since the string array is NULL-terminated so free the last element here.
+                        libc::free(*addresses.add(i) as *mut _);
+                        break;
+                    }
+                    len += 1;
+                }
+            };
+        }
+        StringArrayIter::new(addresses, len)
+    }
+
+    /// Get ip addresses of an interface.
+    pub fn get_ipv6(&self, interface: &str) -> StringArrayIter {
+        let iface = CString::new(interface).unwrap();
+
+        let mut len = 0;
+        let addresses: *mut *mut c_char = unsafe {
+            (*self.handle).get_ips.unwrap()(
+                self.handle,
+                iface.as_ptr(),
+                CString::new("inet6").unwrap().as_ptr(),
+                0,
+            )
+        };
+
+        if addresses != ptr::null_mut() {
+            unsafe {
+                for i in 0.. {
+                    if *addresses.add(i) == ptr::null_mut() {
+                        // Since the string array is NULL-terminated so free the last element here.
+                        libc::free(*addresses.add(i) as *mut _);
+                        break;
+                    }
+                    len += 1;
+                }
+            };
+        }
+        StringArrayIter::new(addresses, len)
     }
 }
