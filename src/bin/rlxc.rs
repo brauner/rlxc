@@ -9,6 +9,7 @@ use rlxc::lxc::{self, Lxc};
 #[macro_use]
 extern crate prettytable;
 use prettytable::Table;
+use rayon::prelude::*;
 
 fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of("name").unwrap();
@@ -61,47 +62,41 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
         },
     };
 
+    let stop_function = |name| {
+        let container = Lxc::new(name, spath)?;
+
+        if !container.may_control() {
+            bail!("Insufficient permissions");
+        }
+
+        if !container.is_running() {
+            println!("Container {:?} not running", name);
+            return Ok(());
+        }
+
+        if force {
+            return container.stop();
+        }
+
+        return container.shutdown(timeout);
+    };
+
     if all {
-        for name in lxc::list_all_containers(spath)? {
-            let container = Lxc::new(&name, spath)?;
+        let bulk: Vec<String> = lxc::list_all_containers(spath)?.collect();
+        let errors: Vec<_> = bulk
+            .par_iter()
+            .map(|name| stop_function(name))
+            .filter_map(Result::err)
+            .collect();
 
-            if !container.may_control() {
-                bail!("Insufficient permissions");
-            }
-
-            if !container.is_running() {
-                println!("Container {:?} not running", name);
-            }
-
-            if force {
-                if let Err(err) = container.stop() {
-                    eprintln!("error: {}", err);
-                }
-            } else {
-                if let Err(err) = container.shutdown(timeout) {
-                    eprintln!("error: {}", err);
-                }
-            }
+        if errors.len() > 0 {
+            bail!("Failed to stop some containers");
         }
 
         return Ok(());
     }
 
-    let container = Lxc::new(sname, spath)?;
-
-    if !container.may_control() {
-        bail!("Insufficient permissions");
-    }
-
-    if !container.is_running() {
-        bail!("Container not running");
-    }
-
-    if force {
-        return container.stop();
-    }
-
-    return container.shutdown(timeout);
+    return stop_function(&sname);
 }
 
 fn cmd_exec(args: &clap::ArgMatches) -> i32 {
