@@ -209,7 +209,7 @@ impl Lxc {
             (*self.handle).get_ips.unwrap()(
                 self.handle,
                 iface.as_ptr(),
-                CString::new("inet").unwrap().as_ptr(),
+                c_str!("inet").as_ptr(),
                 0,
             )
         };
@@ -238,7 +238,7 @@ impl Lxc {
             (*self.handle).get_ips.unwrap()(
                 self.handle,
                 iface.as_ptr(),
-                CString::new("inet6").unwrap().as_ptr(),
+                c_str!("inet6").as_ptr(),
                 0,
             )
         };
