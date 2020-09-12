@@ -98,10 +98,26 @@ impl Lxc {
 
     /// Attempt to start the container. If `stub` is true, the container's
     /// `lxc.execute.cmd` is executed instead of `lxc.init.cmd`.
-    pub fn start(&self, stub: bool) -> Result<(), Error> {
+    pub fn start(&self, stub: bool, argv: Vec<&str>) -> Result<(), Error> {
         let useinit = if stub { 1 } else { 0 };
+        let cargv: Vec<_> =
+            argv.iter().map(|arg| CString::new(*arg).unwrap()).collect();
+        let mut args: Vec<_> = cargv.iter().map(|arg| arg.as_ptr()).collect();
+        if args.is_empty() {
+            args.push(std::ptr::null());
+        }
+
         let started = unsafe {
-            (*self.handle).start.unwrap()(self.handle, useinit, ptr::null())
+            if args.is_empty() {
+                // LXC doesn't alter char *const argv[] so the cast is safe.
+                (*self.handle).start.unwrap()(
+                    self.handle,
+                    useinit,
+                    args.as_ptr() as *const *mut i8,
+                )
+            } else {
+                (*self.handle).start.unwrap()(self.handle, useinit, ptr::null())
+            }
         };
         if !started {
             bail!("failed to start container");
@@ -256,5 +272,11 @@ impl Lxc {
             };
         }
         unsafe { StringArrayIter::new(addresses, len) }
+    }
+
+    pub fn daemonize(&self, daemonize: bool) {
+        unsafe {
+            (*self.handle).want_daemonize.unwrap()(self.handle, daemonize)
+        };
     }
 }

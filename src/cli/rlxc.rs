@@ -65,6 +65,21 @@ pub fn build_cli() -> App<'static, 'static> {
                         .help("Loglevel for the container")
                         .takes_value(true)
                         .required(false),
+                )
+                .arg(
+                    Arg::with_name("terminal")
+                        .long("terminal")
+                        .help("Immediately attach to the terminal for the container")
+                        .takes_value(false)
+                        .required(false),
+                )
+                .arg(
+                    Arg::with_name("command")
+                        .index(2)
+                        .help("Command to execute")
+                        .takes_value(true)
+                        .required(false)
+                        .multiple(true),
                 ),
         )
         .subcommand(

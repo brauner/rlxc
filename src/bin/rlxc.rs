@@ -20,6 +20,11 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Missing required argument: 'path' and no default path set");
     }
 
+    let vals: Vec<&str> = match args.values_of("command") {
+        None => Vec::new(),
+        Some(v) => v.collect(),
+    };
+
     let container = Lxc::new(sname, spath)?;
 
     if !container.may_control() {
@@ -30,7 +35,15 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Container already running");
     }
 
-    container.start(false)
+    if args.is_present("terminal") {
+        container.daemonize(false);
+    }
+
+    if !vals.is_empty() {
+        return container.start(true, vals);
+    }
+
+    container.start(false, vals)
 }
 
 fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
