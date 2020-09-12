@@ -257,4 +257,10 @@ impl Lxc {
         }
         unsafe { StringArrayIter::new(addresses, len) }
     }
+
+    pub fn daemonize(&self, daemonize: bool) {
+        unsafe {
+            (*self.handle).want_daemonize.unwrap()(self.handle, daemonize)
+        };
+    }
 }

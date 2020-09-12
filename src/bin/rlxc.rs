@@ -30,7 +30,11 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Container already running");
     }
 
-    container.start(false)
+    if args.is_present("terminal") {
+        container.daemonize(false);
+    }
+
+    container.start(false, vals)
 }
 
 fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
