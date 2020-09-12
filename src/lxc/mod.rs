@@ -3,7 +3,7 @@
 //! Rust wrapper for `struct lxc_container`. Implements methods to control
 //! containers.
 
-use failure::*;
+use anyhow::{bail, Error};
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
@@ -14,7 +14,7 @@ use std::time::Duration;
 use crate::util::ffi::{StringArrayIter, ToCString};
 
 mod attach_options;
-pub use attach_options::*;
+pub use attach_options::AttachOptions;
 
 /// The main container handle. This implements the methods for `struct
 /// lxc_container`.
@@ -49,7 +49,7 @@ pub fn list_all_containers<T: AsRef<Path>>(
     if nr < 0 {
         bail!("failed to list containers");
     }
-    Ok(StringArrayIter::new(names, nr as usize))
+    Ok(unsafe { StringArrayIter::new(names, nr as usize) })
 }
 
 /// Returns the currently used liblxc's version string.
@@ -187,17 +187,17 @@ impl Lxc {
         let names: *mut *mut c_char =
             unsafe { (*self.handle).get_interfaces.unwrap()(self.handle) };
 
-        if names != ptr::null_mut() {
+        if !names.is_null() {
             unsafe {
                 for i in 0.. {
-                    if *names.add(i) == ptr::null_mut() {
+                    if (*names.add(i)).is_null() {
                         break;
                     }
                     len += 1;
                 }
             };
         }
-        StringArrayIter::new(names, len)
+        unsafe { StringArrayIter::new(names, len) }
     }
 
     /// Get ip addresses of an interface.
@@ -209,15 +209,15 @@ impl Lxc {
             (*self.handle).get_ips.unwrap()(
                 self.handle,
                 iface.as_ptr(),
-                CString::new("inet").unwrap().as_ptr(),
+                c_str!("inet").as_ptr(),
                 0,
             )
         };
 
-        if addresses != ptr::null_mut() {
+        if !addresses.is_null() {
             unsafe {
                 for i in 0.. {
-                    if *addresses.add(i) == ptr::null_mut() {
+                    if (*addresses.add(i)).is_null() {
                         // Since the string array is NULL-terminated so free the last element here.
                         libc::free(*addresses.add(i) as *mut _);
                         break;
@@ -226,7 +226,7 @@ impl Lxc {
                 }
             };
         }
-        StringArrayIter::new(addresses, len)
+        unsafe { StringArrayIter::new(addresses, len) }
     }
 
     /// Get ip addresses of an interface.
@@ -238,15 +238,15 @@ impl Lxc {
             (*self.handle).get_ips.unwrap()(
                 self.handle,
                 iface.as_ptr(),
-                CString::new("inet6").unwrap().as_ptr(),
+                c_str!("inet6").as_ptr(),
                 0,
             )
         };
 
-        if addresses != ptr::null_mut() {
+        if !addresses.is_null() {
             unsafe {
                 for i in 0.. {
-                    if *addresses.add(i) == ptr::null_mut() {
+                    if (*addresses.add(i)).is_null() {
                         // Since the string array is NULL-terminated so free the last element here.
                         libc::free(*addresses.add(i) as *mut _);
                         break;
@@ -255,6 +255,6 @@ impl Lxc {
                 }
             };
         }
-        StringArrayIter::new(addresses, len)
+        unsafe { StringArrayIter::new(addresses, len) }
     }
 }

@@ -2,7 +2,7 @@
 
 use std::process::exit;
 
-use failure::*;
+use anyhow::{bail, Error};
 
 use rlxc::cli::rlxc as cli;
 use rlxc::lxc::{self, Lxc};
@@ -13,7 +13,9 @@ use rayon::prelude::*;
 
 fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of("name").unwrap();
-    let spath = args.value_of("path").unwrap_or(lxc::get_default_path());
+    let spath = args
+        .value_of("path")
+        .unwrap_or_else(|| lxc::get_default_path());
     if spath.is_empty() {
         bail!("Missing required argument: 'path' and no default path set");
     }
@@ -36,14 +38,16 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
     if args.is_present("name") {
         sname = args.value_of("name").unwrap();
     }
-    let spath = args.value_of("path").unwrap_or(lxc::get_default_path());
+    let spath = args
+        .value_of("path")
+        .unwrap_or_else(|| lxc::get_default_path());
     if spath.is_empty() {
         bail!("Missing required argument: 'path' and no default path set");
     }
 
     let all = args.is_present("all");
 
-    if !all && sname.len() == 0 {
+    if !all && sname.is_empty() {
         bail!("Either a single container or all containers must be stopped");
     }
 
@@ -78,7 +82,7 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
             return container.stop();
         }
 
-        return container.shutdown(timeout);
+        container.shutdown(timeout)
     };
 
     if all {
@@ -89,19 +93,21 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
             .filter_map(Result::err)
             .collect();
 
-        if errors.len() > 0 {
+        if !errors.is_empty() {
             bail!("Failed to stop some containers");
         }
 
         return Ok(());
     }
 
-    return stop_function(&sname);
+    stop_function(&sname)
 }
 
 fn cmd_exec(args: &clap::ArgMatches) -> i32 {
     let sname = args.value_of("name").unwrap();
-    let spath = args.value_of("path").unwrap_or(lxc::get_default_path());
+    let spath = args
+        .value_of("path")
+        .unwrap_or_else(|| lxc::get_default_path());
     if spath.is_empty() {
         eprintln!("Missing required argument: 'path' and no default path set");
         return 1;
@@ -145,7 +151,9 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
 }
 
 fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
-    let spath = args.value_of("path").unwrap_or(lxc::get_default_path());
+    let spath = args
+        .value_of("path")
+        .unwrap_or_else(|| lxc::get_default_path());
     if spath.is_empty() {
         bail!("Missing required argument: 'path' and no default path set");
     }
