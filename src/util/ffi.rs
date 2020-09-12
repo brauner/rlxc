@@ -75,21 +75,27 @@ pub struct StringArrayIter {
 }
 
 impl StringArrayIter {
+    /// Get the contents as a slice to work with more easily.
+    fn as_slice(&self) -> &[*mut c_char] {
+        unsafe {
+            std::slice::from_raw_parts(self.ptr as *const *mut c_char, self.len)
+        }
+    }
+
     /// Create a new string array iterator.
     ///
     /// # Safety
     ///
     /// `ptr` must point to an allocated array of valid pointers to C strings.
-    pub unsafe fn new(ptr: *mut *mut c_char, mut len: usize) -> Self {
+    pub unsafe fn new(ptr: *mut *mut c_char, len: usize) -> Self {
+        let mut this = Self { ptr, len, at: 0 };
         // Try to find any early NULLs.
-        for i in 0..len {
-            if (*(ptr.add(i))).is_null() {
-                len = i;
-                break;
-            }
-        }
-        // Construct iterator.
-        Self { ptr, len, at: 0 }
+        this.len = this
+            .as_slice()
+            .iter()
+            .position(|p| p.is_null())
+            .unwrap_or(this.len);
+        this
     }
 }
 
@@ -97,26 +103,22 @@ impl Iterator for StringArrayIter {
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let at = self.at;
-        if at >= self.len {
-            None
-        } else {
-            self.at += 1;
-            let cstr = unsafe { CStr::from_ptr(*(self.ptr.add(at))) };
-            Some(
-                cstr.to_str()
-                    .expect("liblxc returned non-utf8 string")
-                    .to_string(),
-            )
-        }
+        let ptr = *self.as_slice().get(self.at)?;
+        self.at += 1;
+        let cstr = unsafe { CStr::from_ptr(ptr) };
+        Some(
+            cstr.to_str()
+                .expect("liblxc returned non-utf8 string")
+                .to_string(),
+        )
     }
 }
 
 impl Drop for StringArrayIter {
     fn drop(&mut self) {
         unsafe {
-            for i in 0..self.len {
-                libc::free(*self.ptr.add(i) as *mut _);
+            for ptr in self.as_slice() {
+                libc::free(*ptr as *mut libc::c_void);
             }
             libc::free(self.ptr as *mut _);
         }
