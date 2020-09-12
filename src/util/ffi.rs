@@ -6,7 +6,6 @@ use std::borrow::Cow;
 use std::ffi::{CStr, CString, NulError};
 use std::os::raw::c_char;
 use std::os::unix::ffi::OsStrExt;
-use std::ptr;
 
 /// Helper to create a C string array (`char**`) variable with the ownership
 /// still in rust code. The raw version of this will contain a trailing `NULL`
@@ -76,14 +75,17 @@ pub struct StringArrayIter {
 }
 
 impl StringArrayIter {
-    pub fn new(ptr: *mut *mut c_char, mut len: usize) -> Self {
+    /// Create a new string array iterator.
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must point to an allocated array of valid pointers to C strings.
+    pub unsafe fn new(ptr: *mut *mut c_char, mut len: usize) -> Self {
         // Try to find any early NULLs.
-        unsafe {
-            for i in 0..len {
-                if *(ptr.add(i)) == ptr::null_mut() {
-                    len = i;
-                    break;
-                }
+        for i in 0..len {
+            if (*(ptr.add(i))).is_null() {
+                len = i;
+                break;
             }
         }
         // Construct iterator.

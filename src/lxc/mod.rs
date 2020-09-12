@@ -49,7 +49,7 @@ pub fn list_all_containers<T: AsRef<Path>>(
     if nr < 0 {
         bail!("failed to list containers");
     }
-    Ok(StringArrayIter::new(names, nr as usize))
+    Ok(unsafe { StringArrayIter::new(names, nr as usize) })
 }
 
 /// Returns the currently used liblxc's version string.
@@ -197,7 +197,7 @@ impl Lxc {
                 }
             };
         }
-        StringArrayIter::new(names, len)
+        unsafe { StringArrayIter::new(names, len) }
     }
 
     /// Get ip addresses of an interface.
@@ -226,7 +226,7 @@ impl Lxc {
                 }
             };
         }
-        StringArrayIter::new(addresses, len)
+        unsafe { StringArrayIter::new(addresses, len) }
     }
 
     /// Get ip addresses of an interface.
@@ -255,6 +255,6 @@ impl Lxc {
                 }
             };
         }
-        StringArrayIter::new(addresses, len)
+        unsafe { StringArrayIter::new(addresses, len) }
     }
 }
