@@ -187,10 +187,10 @@ impl Lxc {
         let names: *mut *mut c_char =
             unsafe { (*self.handle).get_interfaces.unwrap()(self.handle) };
 
-        if names != ptr::null_mut() {
+        if !names.is_null() {
             unsafe {
                 for i in 0.. {
-                    if *names.add(i) == ptr::null_mut() {
+                    if (*names.add(i)).is_null() {
                         break;
                     }
                     len += 1;
@@ -214,10 +214,10 @@ impl Lxc {
             )
         };
 
-        if addresses != ptr::null_mut() {
+        if !addresses.is_null() {
             unsafe {
                 for i in 0.. {
-                    if *addresses.add(i) == ptr::null_mut() {
+                    if (*addresses.add(i)).is_null() {
                         // Since the string array is NULL-terminated so free the last element here.
                         libc::free(*addresses.add(i) as *mut _);
                         break;
@@ -243,10 +243,10 @@ impl Lxc {
             )
         };
 
-        if addresses != ptr::null_mut() {
+        if !addresses.is_null() {
             unsafe {
                 for i in 0.. {
-                    if *addresses.add(i) == ptr::null_mut() {
+                    if (*addresses.add(i)).is_null() {
                         // Since the string array is NULL-terminated so free the last element here.
                         libc::free(*addresses.add(i) as *mut _);
                         break;
