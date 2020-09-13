@@ -12,10 +12,10 @@ use prettytable::Table;
 use rayon::prelude::*;
 
 fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
-    let sname = args.value_of("name").unwrap();
+    let sname = args.value_of_os("name").unwrap();
     let spath = args
-        .value_of("path")
-        .unwrap_or_else(|| lxc::get_default_path());
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
     if spath.is_empty() {
         bail!("Missing required argument: 'path' and no default path set");
     }
@@ -47,13 +47,11 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
 }
 
 fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
-    let mut sname = "";
-    if args.is_present("name") {
-        sname = args.value_of("name").unwrap();
-    }
+    let sname = args.value_of_os("name").unwrap_or("".as_ref());
+
     let spath = args
-        .value_of("path")
-        .unwrap_or_else(|| lxc::get_default_path());
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
     if spath.is_empty() {
         bail!("Missing required argument: 'path' and no default path set");
     }
@@ -98,29 +96,28 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
         container.shutdown(timeout)
     };
 
-    if all {
-        let bulk: Vec<String> = lxc::list_all_containers(spath)?.collect();
-        let errors: Vec<_> = bulk
-            .par_iter()
-            .map(|name| stop_function(name))
-            .filter_map(Result::err)
-            .collect();
-
-        if !errors.is_empty() {
-            bail!("Failed to stop some containers");
-        }
-
-        return Ok(());
+    if !all {
+        return stop_function(sname);
     }
 
-    stop_function(&sname)
+    let bulk: Vec<String> = lxc::list_all_containers(spath)?.collect();
+    let errors: Vec<_> = bulk
+        .par_iter()
+        .map(|name| stop_function(name.as_ref()))
+        .filter_map(Result::err)
+        .collect();
+
+    if !errors.is_empty() {
+        bail!("Failed to stop some containers");
+    }
+    Ok(())
 }
 
 fn cmd_exec(args: &clap::ArgMatches) -> i32 {
-    let sname = args.value_of("name").unwrap();
+    let sname = args.value_of_os("name").unwrap();
     let spath = args
-        .value_of("path")
-        .unwrap_or_else(|| lxc::get_default_path());
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
     if spath.is_empty() {
         eprintln!("Missing required argument: 'path' and no default path set");
         return 1;
@@ -165,8 +162,8 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
 
 fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
     let spath = args
-        .value_of("path")
-        .unwrap_or_else(|| lxc::get_default_path());
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
     if spath.is_empty() {
         bail!("Missing required argument: 'path' and no default path set");
     }

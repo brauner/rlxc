@@ -4,8 +4,7 @@
 //! containers.
 
 use anyhow::{bail, Error};
-use std::ffi::CStr;
-use std::ffi::CString;
+use std::ffi::{CStr, CString, OsStr};
 use std::os::raw::{c_char, c_int};
 use std::path::Path;
 use std::ptr;
@@ -81,10 +80,12 @@ pub fn get_default_path() -> &'static str {
 impl Lxc {
     /// Create a new container handler for the container of the given `name`
     /// residing under the provided `path`.
-    pub fn new(name: &str, path: &str) -> Result<Lxc, Error> {
-        let cname = CString::new(name).unwrap();
-        let cpath = CString::new(path).unwrap();
-
+    pub fn new<S: AsRef<OsStr>, T: AsRef<OsStr>>(
+        name: S,
+        path: T,
+    ) -> Result<Lxc, Error> {
+        let cname = name.as_ref().to_c_string()?;
+        let cpath = path.as_ref().to_c_string()?;
         let handle = unsafe {
             lxc_sys::lxc_container_new(cname.as_ptr(), cpath.as_ptr())
         };
