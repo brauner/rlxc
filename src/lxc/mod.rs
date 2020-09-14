@@ -71,12 +71,10 @@ pub fn get_global_config_item(key: &str) -> Result<&'static str, Error> {
 }
 
 pub fn get_default_path() -> &'static str {
-    let path = match get_global_config_item("lxc.lxcpath") {
+    match get_global_config_item("lxc.lxcpath") {
         Ok(s) => s,
-        Err(_) => return "",
-    };
-
-    path
+        Err(_) => "",
+    }
 }
 
 pub fn set_log(options: &mut LogOptions) -> Result<(), Error> {
