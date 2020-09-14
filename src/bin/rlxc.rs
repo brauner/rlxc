@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
-use std::process::exit;
+use std::os::unix::process::ExitStatusExt;
+use std::process::{exit, ExitStatus};
 
 use anyhow::{bail, Error};
 
@@ -175,7 +176,20 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
             }
         }
     }
-    container.attach_run_wait(&mut options, vals[0], vals)
+
+    let ret = container.attach_run_wait(&mut options, vals[0], vals);
+    let status = ExitStatus::from_raw(ret);
+    if status.success() {
+        return 0;
+    }
+
+    match status.code() {
+        Some(code) => code,
+        None => match status.signal() {
+            Some(signal) => 128 + signal,
+            None => -1,
+        },
+    }
 }
 
 fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
