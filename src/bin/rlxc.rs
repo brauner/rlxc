@@ -220,6 +220,28 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
     Ok(())
 }
 
+fn cmd_login(args: &clap::ArgMatches) -> Result<(), Error> {
+    let sname = args.value_of_os("name").unwrap();
+    let spath = args
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
+    if spath.is_empty() {
+        bail!("Missing required argument: 'path' and no default path set");
+    }
+
+    let container = Lxc::new(sname, spath)?;
+
+    if !container.may_control() {
+        bail!("Insufficient permissions");
+    }
+
+    if !container.is_running() {
+        bail!("Container not running");
+    }
+
+    container.terminal()
+}
+
 fn do_cmd(
     args: &clap::ArgMatches,
     func: fn(args: &clap::ArgMatches) -> Result<(), Error>,
@@ -248,6 +270,7 @@ fn main() {
         ("start", Some(args)) => do_cmd(args, cmd_start),
         ("stop", Some(args)) => do_cmd(args, cmd_stop),
         ("list", Some(args)) => do_cmd(args, cmd_list),
+        ("login", Some(args)) => do_cmd(args, cmd_login),
         ("exec", Some(args)) => exit(cmd_exec(args)),
         _ => {
             println!("{}", matches.usage());

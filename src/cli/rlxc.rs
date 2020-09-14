@@ -33,6 +33,16 @@ pub fn build_cli() -> App<'static, 'static> {
                 .required(false)
         )
         .subcommand(
+            SubCommand::with_name("login")
+                .about("Attach to terminal of container")
+                .arg(
+                    Arg::with_name("name")
+                        .index(1)
+                        .help("Name of the container")
+                        .required(true),
+                ),
+        )
+        .subcommand(
             SubCommand::with_name("exec")
                 .about("Execute commands in a container")
                 .arg(

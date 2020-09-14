@@ -292,4 +292,15 @@ impl Lxc {
             (*self.handle).want_daemonize.unwrap()(self.handle, daemonize)
         };
     }
+
+    pub fn terminal(&self) -> Result<(), Error> {
+        let ret = unsafe {
+            (*self.handle).console.unwrap()(self.handle, 0, 0, 1, 2, 1)
+        };
+
+        if ret < 0 {
+            bail!("failed to attach to terminal");
+        }
+        Ok(())
+    }
 }

@@ -9,6 +9,7 @@ Currently covers:
 - `lxc-execute -> rlxc start <name> [command]`
 - `lxc-stop` -> `rlxc stop`
 - `lxc-ls` -> `rlxc list`
+- `lxc-console` -> `rlxc login <name>`
 
 as well as:
 
