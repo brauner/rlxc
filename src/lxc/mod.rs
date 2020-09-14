@@ -114,12 +114,12 @@ impl Lxc {
         let cargv: Vec<_> =
             argv.iter().map(|arg| CString::new(*arg).unwrap()).collect();
         let mut args: Vec<_> = cargv.iter().map(|arg| arg.as_ptr()).collect();
-        if args.is_empty() {
+        if !args.is_empty() {
             args.push(std::ptr::null());
         }
 
         let started = unsafe {
-            if args.is_empty() {
+            if !args.is_empty() {
                 // LXC doesn't alter char *const argv[] so the cast is safe.
                 (*self.handle).start.unwrap()(
                     self.handle,
