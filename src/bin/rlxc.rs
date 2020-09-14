@@ -13,12 +13,15 @@ use prettytable::Table;
 use rayon::prelude::*;
 
 fn initialize_log(args: &clap::ArgMatches) -> Result<(), Error> {
-    let logfile = args.value_of_os("logfile").unwrap_or("none".as_ref());
+    let logfile = args
+        .value_of_os("logfile")
+        .unwrap_or_else(|| "none".as_ref());
     if !logfile.is_empty() {
         let mut options = lxc::LogOptions::new();
         options = options.set_log_file(logfile)?;
         options = options.set_log_level(
-            args.value_of_os("loglevel").unwrap_or("ERROR".as_ref()),
+            args.value_of_os("loglevel")
+                .unwrap_or_else(|| "ERROR".as_ref()),
         )?;
         lxc::set_log(&mut options)?;
     }
@@ -61,7 +64,7 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
 }
 
 fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
-    let sname = args.value_of_os("name").unwrap_or("".as_ref());
+    let sname = args.value_of_os("name").unwrap_or_else(|| "".as_ref());
 
     let spath = args
         .value_of_os("path")
