@@ -191,18 +191,20 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
 
         let mut ipv4 = String::new();
         let mut ipv6 = String::new();
-        let interfaces = container.get_interfaces();
-        for iface in interfaces {
-            // skip the loopback device
-            if iface == "lo" {
-                continue;
-            }
+        if container.is_running() {
+            let interfaces = container.get_interfaces();
+            for iface in interfaces {
+                // skip the loopback device
+                if iface == "lo" {
+                    continue;
+                }
 
-            for ipv4_addr in container.get_ipv4(&iface) {
-                ipv4.push_str(&format!("{} ({})\n", ipv4_addr, iface));
-            }
-            for ipv6_addr in container.get_ipv6(&iface) {
-                ipv6.push_str(&format!("{} ({})\n", ipv6_addr, iface));
+                for ipv4_addr in container.get_ipv4(&iface) {
+                    ipv4.push_str(&format!("{} ({})\n", ipv4_addr, iface));
+                }
+                for ipv6_addr in container.get_ipv6(&iface) {
+                    ipv6.push_str(&format!("{} ({})\n", ipv6_addr, iface));
+                }
             }
         }
 
