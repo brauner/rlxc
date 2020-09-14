@@ -11,6 +11,19 @@ extern crate prettytable;
 use prettytable::Table;
 use rayon::prelude::*;
 
+fn initialize_log(args: &clap::ArgMatches) -> Result<(), Error> {
+    let logfile = args.value_of_os("logfile").unwrap_or("none".as_ref());
+    if !logfile.is_empty() {
+        let mut options = lxc::LogOptions::new();
+        options = options.set_log_file(logfile)?;
+        options = options.set_log_level(
+            args.value_of_os("loglevel").unwrap_or("ERROR".as_ref()),
+        )?;
+        lxc::set_log(&mut options)?;
+    }
+    Ok(())
+}
+
 fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
     let sname = args.value_of_os("name").unwrap();
     let spath = args
@@ -20,22 +33,10 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Missing required argument: 'path' and no default path set");
     }
 
-    let logfile = args.value_of_os("logfile").unwrap_or("none".as_ref());
-    let loglevel = args.value_of_os("loglevel").unwrap_or("ERROR".as_ref());
-
     let vals: Vec<&str> = match args.values_of("command") {
         None => Vec::new(),
         Some(v) => v.collect(),
     };
-
-    if !logfile.is_empty() {
-        let mut options = lxc::LogOptions::new();
-        options = options.set_log_name(sname)?;
-        options = options.set_log_path(spath)?;
-        options = options.set_log_file(logfile)?;
-        options = options.set_log_level(loglevel)?;
-        lxc::set_log(&mut options)?
-    }
 
     let container = Lxc::new(sname, spath)?;
 
@@ -139,6 +140,11 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
         .values_of("env")
         .map_or_else(Vec::new, |matches| matches.collect());
 
+    if let Err(err) = initialize_log(args) {
+        eprintln!("error: {}", err);
+        return 1;
+    };
+
     let container = match Lxc::new(sname, spath) {
         Ok(c) => c,
         Err(_) => return 1,
@@ -218,6 +224,11 @@ fn do_cmd(
     args: &clap::ArgMatches,
     func: fn(args: &clap::ArgMatches) -> Result<(), Error>,
 ) {
+    if let Err(err) = initialize_log(args) {
+        eprintln!("error: {}", err);
+        exit(1);
+    };
+
     if let Err(err) = func(args) {
         eprintln!("error: {}", err);
         exit(1);
