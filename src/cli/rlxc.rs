@@ -14,7 +14,23 @@ pub fn build_cli() -> App<'static, 'static> {
                 .help("Base path for containers")
                 .global(true)
                 .takes_value(true)
-                .required(false),
+                .required(false)
+        )
+        .arg(
+            Arg::with_name("logfile")
+                .long("logfile")
+                .help("Logfile for the container")
+                .global(true)
+                .takes_value(true)
+                .required(false)
+        )
+        .arg(
+            Arg::with_name("loglevel")
+                .long("loglevel")
+                .help("Loglevel for the container")
+                .global(true)
+                .takes_value(true)
+                .required(false)
         )
         .subcommand(
             SubCommand::with_name("exec")
@@ -51,20 +67,6 @@ pub fn build_cli() -> App<'static, 'static> {
                         .index(1)
                         .help("Name of the container")
                         .required(true),
-                )
-                .arg(
-                    Arg::with_name("logfile")
-                        .long("logfile")
-                        .help("Logfile for the container")
-                        .takes_value(true)
-                        .required(false),
-                )
-                .arg(
-                    Arg::with_name("loglevel")
-                        .long("loglevel")
-                        .help("Loglevel for the container")
-                        .takes_value(true)
-                        .required(false),
                 )
                 .arg(
                     Arg::with_name("terminal")
