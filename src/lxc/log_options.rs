@@ -27,7 +27,15 @@ impl LogOptions {
             quiet: true,
         }
     }
+}
 
+impl Default for LogOptions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl LogOptions {
     pub fn set_log_name<T: AsRef<OsStr>>(
         mut self,
         v: T,
