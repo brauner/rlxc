@@ -12,6 +12,13 @@ extern crate prettytable;
 use prettytable::Table;
 use rayon::prelude::*;
 
+fn may_control_container(c: &Lxc) -> Result<(), Error> {
+    if let Err(err) = c.may_control() {
+        eprintln!("{}", err);
+    }
+    Ok(())
+}
+
 fn initialize_log(args: &clap::ArgMatches) -> Result<(), Error> {
     let logfile = args
         .value_of_os("logfile")
@@ -44,9 +51,7 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
 
     let container = Lxc::new(sname, spath)?;
 
-    if !container.may_control() {
-        bail!("Insufficient permissions");
-    }
+    may_control_container(&container)?;
 
     if container.is_running() {
         bail!("Container already running");
@@ -97,9 +102,7 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
     let stop_function = |name| {
         let container = Lxc::new(name, spath)?;
 
-        if !container.may_control() {
-            bail!("Insufficient permissions");
-        }
+        may_control_container(&container)?;
 
         if !container.is_running() {
             println!("Container {:?} not running", name);
@@ -154,8 +157,7 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
         Err(_) => return 1,
     };
 
-    if !container.may_control() {
-        eprintln!("Insufficient permissions");
+    if may_control_container(&container).is_err() {
         return 1;
     }
 
@@ -208,7 +210,7 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
     for name in lxc::list_all_containers(spath)? {
         let container = Lxc::new(&name, spath)?;
 
-        if !container.may_control() {
+        if may_control_container(&container).is_err() {
             continue;
         }
 
@@ -248,9 +250,7 @@ fn cmd_login(args: &clap::ArgMatches) -> Result<(), Error> {
 
     let container = Lxc::new(sname, spath)?;
 
-    if !container.may_control() {
-        bail!("Insufficient permissions");
-    }
+    may_control_container(&container)?;
 
     if !container.is_running() {
         bail!("Container not running");

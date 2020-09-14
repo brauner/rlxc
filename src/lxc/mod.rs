@@ -107,6 +107,22 @@ impl Lxc {
         Ok(Lxc { handle })
     }
 
+    pub fn name(&self) -> Option<&str> {
+        let n = unsafe { CStr::from_ptr((*self.handle).name) };
+        match n.to_str() {
+            Ok(s) => Some(s),
+            Err(_) => None,
+        }
+    }
+
+    pub fn path(&self) -> Option<&str> {
+        let n = unsafe { CStr::from_ptr((*self.handle).config_path) };
+        match n.to_str() {
+            Ok(s) => Some(s),
+            Err(_) => None,
+        }
+    }
+
     /// Attempt to start the container. If `stub` is true, the container's
     /// `lxc.execute.cmd` is executed instead of `lxc.init.cmd`.
     pub fn start(&self, stub: bool, argv: Vec<&str>) -> Result<(), Error> {
@@ -167,8 +183,14 @@ impl Lxc {
     }
 
     /// Determine if the caller may control the container.
-    pub fn may_control(&self) -> bool {
-        unsafe { (*self.handle).may_control.unwrap()(self.handle) }
+    pub fn may_control(&self) -> Result<(), Error> {
+        if !unsafe { (*self.handle).may_control.unwrap()(self.handle) } {
+            match self.name() {
+                Some(n) => bail!("Insufficient permissions to control {}", n),
+                None => bail!("Insufficient permissions to control container"),
+            }
+        };
+        Ok(())
     }
 
     /// Determine if the container is running.
