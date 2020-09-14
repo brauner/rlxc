@@ -20,10 +20,22 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Missing required argument: 'path' and no default path set");
     }
 
+    let logfile = args.value_of_os("logfile").unwrap_or("none".as_ref());
+    let loglevel = args.value_of_os("loglevel").unwrap_or("ERROR".as_ref());
+
     let vals: Vec<&str> = match args.values_of("command") {
         None => Vec::new(),
         Some(v) => v.collect(),
     };
+
+    if !logfile.is_empty() {
+        let mut options = lxc::LogOptions::new();
+        options = options.set_log_name(sname)?;
+        options = options.set_log_path(spath)?;
+        options = options.set_log_file(logfile)?;
+        options = options.set_log_level(loglevel)?;
+        lxc::set_log(&mut options)?
+    }
 
     let container = Lxc::new(sname, spath)?;
 

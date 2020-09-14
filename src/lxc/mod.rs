@@ -13,7 +13,9 @@ use std::time::Duration;
 use crate::util::ffi::{StringArrayIter, ToCString};
 
 mod attach_options;
+mod log_options;
 pub use attach_options::AttachOptions;
+pub use log_options::LogOptions;
 
 /// The main container handle. This implements the methods for `struct
 /// lxc_container`.
@@ -75,6 +77,16 @@ pub fn get_default_path() -> &'static str {
     };
 
     path
+}
+
+pub fn set_log(options: &mut LogOptions) -> Result<(), Error> {
+    let ret = unsafe { lxc_sys::lxc_log_init(options.raw()) };
+
+    if ret < 0 {
+        bail!("failed to initialize log");
+    }
+
+    Ok(())
 }
 
 impl Lxc {
