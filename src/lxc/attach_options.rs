@@ -20,6 +20,9 @@ pub struct AttachOptions<'t, 'u, 'v, 'w> {
 }
 
 impl AttachOptions<'static, 'static, 'static, 'static> {
+    pub fn default() -> Self {
+        Self::new()
+    }
     pub fn new() -> Self {
         Self {
             raw: unsafe { std::mem::zeroed() },
@@ -32,6 +35,12 @@ impl AttachOptions<'static, 'static, 'static, 'static> {
             log_file: None,
         }
         .set_default()
+    }
+}
+
+impl Default for AttachOptions<'static, 'static, 'static, 'static> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
