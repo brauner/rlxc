@@ -4,8 +4,7 @@
 //! containers.
 
 use anyhow::{bail, Error};
-use std::ffi::CStr;
-use std::ffi::CString;
+use std::ffi::{CStr, CString, OsStr};
 use std::os::raw::{c_char, c_int};
 use std::path::Path;
 use std::ptr;
@@ -14,7 +13,9 @@ use std::time::Duration;
 use crate::util::ffi::{StringArrayIter, ToCString};
 
 mod attach_options;
+mod log_options;
 pub use attach_options::AttachOptions;
+pub use log_options::LogOptions;
 
 /// The main container handle. This implements the methods for `struct
 /// lxc_container`.
@@ -70,21 +71,31 @@ pub fn get_global_config_item(key: &str) -> Result<&'static str, Error> {
 }
 
 pub fn get_default_path() -> &'static str {
-    let path = match get_global_config_item("lxc.lxcpath") {
+    match get_global_config_item("lxc.lxcpath") {
         Ok(s) => s,
-        Err(_) => return "",
-    };
+        Err(_) => "",
+    }
+}
 
-    path
+pub fn set_log(options: &mut LogOptions) -> Result<(), Error> {
+    let ret = unsafe { lxc_sys::lxc_log_init(options.raw()) };
+
+    if ret < 0 {
+        bail!("failed to initialize log");
+    }
+
+    Ok(())
 }
 
 impl Lxc {
     /// Create a new container handler for the container of the given `name`
     /// residing under the provided `path`.
-    pub fn new(name: &str, path: &str) -> Result<Lxc, Error> {
-        let cname = CString::new(name).unwrap();
-        let cpath = CString::new(path).unwrap();
-
+    pub fn new<S: AsRef<OsStr>, T: AsRef<OsStr>>(
+        name: S,
+        path: T,
+    ) -> Result<Lxc, Error> {
+        let cname = name.as_ref().to_c_string()?;
+        let cpath = path.as_ref().to_c_string()?;
         let handle = unsafe {
             lxc_sys::lxc_container_new(cname.as_ptr(), cpath.as_ptr())
         };
@@ -103,12 +114,12 @@ impl Lxc {
         let cargv: Vec<_> =
             argv.iter().map(|arg| CString::new(*arg).unwrap()).collect();
         let mut args: Vec<_> = cargv.iter().map(|arg| arg.as_ptr()).collect();
-        if args.is_empty() {
+        if !args.is_empty() {
             args.push(std::ptr::null());
         }
 
         let started = unsafe {
-            if args.is_empty() {
+            if !args.is_empty() {
                 // LXC doesn't alter char *const argv[] so the cast is safe.
                 (*self.handle).start.unwrap()(
                     self.handle,
@@ -278,5 +289,16 @@ impl Lxc {
         unsafe {
             (*self.handle).want_daemonize.unwrap()(self.handle, daemonize)
         };
+    }
+
+    pub fn terminal(&self) -> Result<(), Error> {
+        let ret = unsafe {
+            (*self.handle).console.unwrap()(self.handle, 0, 0, 1, 2, 1)
+        };
+
+        if ret < 0 {
+            bail!("failed to attach to terminal");
+        }
+        Ok(())
     }
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
-use std::process::exit;
+use std::os::unix::process::ExitStatusExt;
+use std::process::{exit, ExitStatus};
 
 use anyhow::{bail, Error};
 
@@ -11,11 +12,27 @@ extern crate prettytable;
 use prettytable::Table;
 use rayon::prelude::*;
 
+fn initialize_log(args: &clap::ArgMatches) -> Result<(), Error> {
+    let logfile = args
+        .value_of_os("logfile")
+        .unwrap_or_else(|| "none".as_ref());
+    if !logfile.is_empty() {
+        let mut options = lxc::LogOptions::new();
+        options = options.set_log_file(logfile)?;
+        options = options.set_log_level(
+            args.value_of_os("loglevel")
+                .unwrap_or_else(|| "ERROR".as_ref()),
+        )?;
+        lxc::set_log(&mut options)?;
+    }
+    Ok(())
+}
+
 fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
-    let sname = args.value_of("name").unwrap();
+    let sname = args.value_of_os("name").unwrap();
     let spath = args
-        .value_of("path")
-        .unwrap_or_else(|| lxc::get_default_path());
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
     if spath.is_empty() {
         bail!("Missing required argument: 'path' and no default path set");
     }
@@ -47,13 +64,11 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
 }
 
 fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
-    let mut sname = "";
-    if args.is_present("name") {
-        sname = args.value_of("name").unwrap();
-    }
+    let sname = args.value_of_os("name").unwrap_or_else(|| "".as_ref());
+
     let spath = args
-        .value_of("path")
-        .unwrap_or_else(|| lxc::get_default_path());
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
     if spath.is_empty() {
         bail!("Missing required argument: 'path' and no default path set");
     }
@@ -98,29 +113,28 @@ fn cmd_stop(args: &clap::ArgMatches) -> Result<(), Error> {
         container.shutdown(timeout)
     };
 
-    if all {
-        let bulk: Vec<String> = lxc::list_all_containers(spath)?.collect();
-        let errors: Vec<_> = bulk
-            .par_iter()
-            .map(|name| stop_function(name))
-            .filter_map(Result::err)
-            .collect();
-
-        if !errors.is_empty() {
-            bail!("Failed to stop some containers");
-        }
-
-        return Ok(());
+    if !all {
+        return stop_function(sname);
     }
 
-    stop_function(&sname)
+    let bulk: Vec<String> = lxc::list_all_containers(spath)?.collect();
+    let errors: Vec<_> = bulk
+        .par_iter()
+        .map(|name| stop_function(name.as_ref()))
+        .filter_map(Result::err)
+        .collect();
+
+    if !errors.is_empty() {
+        bail!("Failed to stop some containers");
+    }
+    Ok(())
 }
 
 fn cmd_exec(args: &clap::ArgMatches) -> i32 {
-    let sname = args.value_of("name").unwrap();
+    let sname = args.value_of_os("name").unwrap();
     let spath = args
-        .value_of("path")
-        .unwrap_or_else(|| lxc::get_default_path());
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
     if spath.is_empty() {
         eprintln!("Missing required argument: 'path' and no default path set");
         return 1;
@@ -129,6 +143,11 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
     let env: Vec<&str> = args
         .values_of("env")
         .map_or_else(Vec::new, |matches| matches.collect());
+
+    if let Err(err) = initialize_log(args) {
+        eprintln!("error: {}", err);
+        return 1;
+    };
 
     let container = match Lxc::new(sname, spath) {
         Ok(c) => c,
@@ -160,13 +179,26 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
             }
         }
     }
-    container.attach_run_wait(&mut options, vals[0], vals)
+
+    let ret = container.attach_run_wait(&mut options, vals[0], vals);
+    let status = ExitStatus::from_raw(ret);
+    if status.success() {
+        return 0;
+    }
+
+    match status.code() {
+        Some(code) => code,
+        None => match status.signal() {
+            Some(signal) => 128 + signal,
+            None => -1,
+        },
+    }
 }
 
 fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
     let spath = args
-        .value_of("path")
-        .unwrap_or_else(|| lxc::get_default_path());
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
     if spath.is_empty() {
         bail!("Missing required argument: 'path' and no default path set");
     }
@@ -182,18 +214,20 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
 
         let mut ipv4 = String::new();
         let mut ipv6 = String::new();
-        let interfaces = container.get_interfaces();
-        for iface in interfaces {
-            // skip the loopback device
-            if iface == "lo" {
-                continue;
-            }
+        if container.is_running() {
+            let interfaces = container.get_interfaces();
+            for iface in interfaces {
+                // skip the loopback device
+                if iface == "lo" {
+                    continue;
+                }
 
-            for ipv4_addr in container.get_ipv4(&iface) {
-                ipv4.push_str(&format!("{} ({})\n", ipv4_addr, iface));
-            }
-            for ipv6_addr in container.get_ipv6(&iface) {
-                ipv6.push_str(&format!("{} ({})\n", ipv6_addr, iface));
+                for ipv4_addr in container.get_ipv4(&iface) {
+                    ipv4.push_str(&format!("{} ({})\n", ipv4_addr, iface));
+                }
+                for ipv6_addr in container.get_ipv6(&iface) {
+                    ipv6.push_str(&format!("{} ({})\n", ipv6_addr, iface));
+                }
             }
         }
 
@@ -203,10 +237,37 @@ fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
     Ok(())
 }
 
+fn cmd_login(args: &clap::ArgMatches) -> Result<(), Error> {
+    let sname = args.value_of_os("name").unwrap();
+    let spath = args
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
+    if spath.is_empty() {
+        bail!("Missing required argument: 'path' and no default path set");
+    }
+
+    let container = Lxc::new(sname, spath)?;
+
+    if !container.may_control() {
+        bail!("Insufficient permissions");
+    }
+
+    if !container.is_running() {
+        bail!("Container not running");
+    }
+
+    container.terminal()
+}
+
 fn do_cmd(
     args: &clap::ArgMatches,
     func: fn(args: &clap::ArgMatches) -> Result<(), Error>,
 ) {
+    if let Err(err) = initialize_log(args) {
+        eprintln!("error: {}", err);
+        exit(1);
+    };
+
     if let Err(err) = func(args) {
         eprintln!("error: {}", err);
         exit(1);
@@ -226,6 +287,7 @@ fn main() {
         ("start", Some(args)) => do_cmd(args, cmd_start),
         ("stop", Some(args)) => do_cmd(args, cmd_stop),
         ("list", Some(args)) => do_cmd(args, cmd_list),
+        ("login", Some(args)) => do_cmd(args, cmd_login),
         ("exec", Some(args)) => exit(cmd_exec(args)),
         _ => {
             println!("{}", matches.usage());
