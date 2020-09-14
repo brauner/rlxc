@@ -38,7 +38,8 @@ impl AttachOptions<'static, 'static, 'static, 'static> {
 impl<'t, 'u, 'v, 'w> AttachOptions<'t, 'u, 'v, 'w> {
     #[inline(always)]
     fn set_default(mut self) -> Self {
-        self.raw.attach_flags = lxc_sys::LXC_ATTACH_DEFAULT as c_int;
+        self.raw.attach_flags = lxc_sys::LXC_ATTACH_DEFAULT as c_int
+            | lxc_sys::LXC_ATTACH_TERMINAL as c_int;
         self.raw.namespaces = -1;
         self.raw.personality = -1;
         self.raw.uid = !0;
