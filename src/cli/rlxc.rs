@@ -80,6 +80,7 @@ pub fn build_cli() -> App<'static, 'static> {
                 )
                 .arg(
                     Arg::with_name("terminal")
+                        .short("t")
                         .long("terminal")
                         .help("Immediately attach to the terminal for the container")
                         .takes_value(false)
