@@ -18,7 +18,8 @@ pub fn build_cli() -> App<'static, 'static> {
         )
         .arg(
             Arg::with_name("logfile")
-                .long("logfile")
+                .short("o")
+                .long("output")
                 .help("Logfile for the container")
                 .global(true)
                 .takes_value(true)
@@ -26,7 +27,8 @@ pub fn build_cli() -> App<'static, 'static> {
         )
         .arg(
             Arg::with_name("loglevel")
-                .long("loglevel")
+                .short("l")
+                .long("level")
                 .help("Loglevel for the container")
                 .global(true)
                 .takes_value(true)
