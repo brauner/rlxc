@@ -63,6 +63,22 @@ pub fn build_cli() -> App<'static, 'static> {
                         .number_of_values(1),
                 )
                 .arg(
+                    Arg::with_name("user")
+                        .short("u")
+                        .long("user")
+                        .help("User ID to run the command as (default 0)")
+                        .takes_value(true)
+                        .required(false)
+                )
+                .arg(
+                    Arg::with_name("group")
+                        .short("g")
+                        .long("group")
+                        .help("Group ID to run the command as (default 0)")
+                        .takes_value(true)
+                        .required(false)
+                )
+                .arg(
                     Arg::with_name("command")
                         .index(2)
                         .help("Command to execute")

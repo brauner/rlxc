@@ -182,6 +182,30 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
         }
     }
 
+    let uid = match args.value_of("user") {
+        None => None,
+        Some(value) => match value.parse::<libc::uid_t>() {
+            Ok(v) => Some(v),
+            Err(err) => {
+                eprintln!("{} - invalid user id specified", err);
+                return 1;
+            }
+        },
+    };
+    options = options.uid(uid);
+
+    let gid = match args.value_of("group") {
+        None => None,
+        Some(value) => match value.parse::<libc::gid_t>() {
+            Ok(v) => Some(v),
+            Err(err) => {
+                eprintln!("{} - invalid group id specified", err);
+                return 1;
+            }
+        },
+    };
+    options = options.gid(gid);
+
     let ret = container.attach_run_wait(&mut options, vals[0], vals);
     let status = ExitStatus::from_raw(ret);
     if status.success() {
