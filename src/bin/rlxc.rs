@@ -19,12 +19,20 @@ fn may_control_container(c: &Lxc) -> Result<(), Error> {
     Ok(())
 }
 
-fn initialize_log(args: &clap::ArgMatches) -> Result<(), Error> {
+fn initialize_log(
+    subcommand: &'static str,
+    args: &clap::ArgMatches,
+) -> Result<(), Error> {
     let logfile = args
         .value_of_os("logfile")
         .unwrap_or_else(|| "none".as_ref());
     if !logfile.is_empty() {
         let mut options = lxc::LogOptions::new();
+        options = options.set_log_prefix(&format!(
+            "{} {}",
+            clap::crate_name!(),
+            subcommand
+        ))?;
         options = options.set_log_file(logfile)?;
         options = options.set_log_level(
             args.value_of_os("loglevel")
@@ -147,7 +155,7 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
         .values_of("env")
         .map_or_else(Vec::new, |matches| matches.collect());
 
-    if let Err(err) = initialize_log(args) {
+    if let Err(err) = initialize_log("exec", args) {
         eprintln!("error: {}", err);
         return 1;
     };
@@ -181,6 +189,30 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
             }
         }
     }
+
+    let uid = match args.value_of("user") {
+        None => None,
+        Some(value) => match value.parse::<libc::uid_t>() {
+            Ok(v) => Some(v),
+            Err(err) => {
+                eprintln!("{} - invalid user id specified", err);
+                return 1;
+            }
+        },
+    };
+    options = options.uid(uid);
+
+    let gid = match args.value_of("group") {
+        None => None,
+        Some(value) => match value.parse::<libc::gid_t>() {
+            Ok(v) => Some(v),
+            Err(err) => {
+                eprintln!("{} - invalid group id specified", err);
+                return 1;
+            }
+        },
+    };
+    options = options.gid(gid);
 
     let ret = container.attach_run_wait(&mut options, vals[0], vals);
     let status = ExitStatus::from_raw(ret);
@@ -260,10 +292,11 @@ fn cmd_login(args: &clap::ArgMatches) -> Result<(), Error> {
 }
 
 fn do_cmd(
+    subcommand: &'static str,
     args: &clap::ArgMatches,
     func: fn(args: &clap::ArgMatches) -> Result<(), Error>,
 ) {
-    if let Err(err) = initialize_log(args) {
+    if let Err(err) = initialize_log(subcommand, args) {
         eprintln!("error: {}", err);
         exit(1);
     };
@@ -284,10 +317,10 @@ fn main() {
     }
 
     match matches.subcommand() {
-        ("start", Some(args)) => do_cmd(args, cmd_start),
-        ("stop", Some(args)) => do_cmd(args, cmd_stop),
-        ("list", Some(args)) => do_cmd(args, cmd_list),
-        ("login", Some(args)) => do_cmd(args, cmd_login),
+        ("start", Some(args)) => do_cmd("start", args, cmd_start),
+        ("stop", Some(args)) => do_cmd("stop", args, cmd_stop),
+        ("list", Some(args)) => do_cmd("list", args, cmd_list),
+        ("login", Some(args)) => do_cmd("login", args, cmd_login),
         ("exec", Some(args)) => exit(cmd_exec(args)),
         _ => {
             println!("{}", matches.usage());

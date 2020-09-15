@@ -18,7 +18,8 @@ pub fn build_cli() -> App<'static, 'static> {
         )
         .arg(
             Arg::with_name("logfile")
-                .long("logfile")
+                .short("o")
+                .long("output")
                 .help("Logfile for the container")
                 .global(true)
                 .takes_value(true)
@@ -26,7 +27,8 @@ pub fn build_cli() -> App<'static, 'static> {
         )
         .arg(
             Arg::with_name("loglevel")
-                .long("loglevel")
+                .short("l")
+                .long("level")
                 .help("Loglevel for the container")
                 .global(true)
                 .takes_value(true)
@@ -61,6 +63,22 @@ pub fn build_cli() -> App<'static, 'static> {
                         .number_of_values(1),
                 )
                 .arg(
+                    Arg::with_name("user")
+                        .short("u")
+                        .long("user")
+                        .help("User ID to run the command as (default 0)")
+                        .takes_value(true)
+                        .required(false)
+                )
+                .arg(
+                    Arg::with_name("group")
+                        .short("g")
+                        .long("group")
+                        .help("Group ID to run the command as (default 0)")
+                        .takes_value(true)
+                        .required(false)
+                )
+                .arg(
                     Arg::with_name("command")
                         .index(2)
                         .help("Command to execute")
@@ -80,6 +98,7 @@ pub fn build_cli() -> App<'static, 'static> {
                 )
                 .arg(
                     Arg::with_name("terminal")
+                        .short("t")
                         .long("terminal")
                         .help("Immediately attach to the terminal for the container")
                         .takes_value(false)
