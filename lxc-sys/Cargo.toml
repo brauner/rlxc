@@ -6,6 +6,10 @@ authors = [
     "Christian Brauner <christian.brauner@ubuntu.com>",
     "Wolfgang Bumiller <w.bumiller@proxmox.com>",
 ]
+license = "LGPL-2.1+"
+license-file = "LICENSE.LGPL2.1"
+repository = "https://github.com/brauner/rlxc"
+keywords = ["containers", "lxc", "linux"]
 
 [build-dependencies]
 bindgen = ">0.42.2"
