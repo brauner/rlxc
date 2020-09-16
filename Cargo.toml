@@ -6,6 +6,7 @@ authors = [
     "Christian Brauner <christian.brauner@ubuntu.com>",
     "Wolfgang Bumiller <w.bumiller@proxmox.com>",
 ]
+description = "A simple tool to interact with LXC containers"
 build = "build.rs"
 license-file = "LICENSE.LGPL2.1"
 repository = "https://github.com/brauner/rlxc"
