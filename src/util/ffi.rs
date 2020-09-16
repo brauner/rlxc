@@ -138,14 +138,14 @@ impl Drop for StringArrayIter {
 /// it as:
 ///
 /// ```
-// use rlxc::util::ffi::ToCString;
-//
-// fn foo<T: ?Sized + ToCString>(path: &T) -> Result<()> {
-//     let cpath = path.to_c_string()?;
-//     unsafe { c_function(cpath.as_ptr()) };
-//     Ok(())
-// }
-// ```
+/// use rlxc::util::ffi::ToCString;
+///
+/// fn foo<T: ?Sized + ToCString>(path: &T) -> Result<()> {
+///     let cpath = path.to_c_string()?;
+///     unsafe { c_function(cpath.as_ptr()) };
+///     Ok(())
+/// }
+/// ```
 pub trait ToCString {
     fn to_c_string(&self) -> Result<Cow<CStr>, NulError>;
 }
