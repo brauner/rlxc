@@ -1,0 +1,10 @@
+language: rust
+rust:
+  - stable
+  - beta
+before_script:
+  - rustup component add clippy
+script:
+  - cargo clippy
+  - cargo test
+  # etc.
