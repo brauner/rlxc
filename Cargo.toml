@@ -7,7 +7,6 @@ authors = [
     "Wolfgang Bumiller <w.bumiller@proxmox.com>",
 ]
 build = "build.rs"
-license = "LGPL-2.1+"
 license-file = "LICENSE.LGPL2.1"
 repository = "https://github.com/brauner/rlxc"
 keywords = ["containers", "lxc", "linux"]
