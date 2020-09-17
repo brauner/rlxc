@@ -150,7 +150,9 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
         eprintln!("Missing required argument: 'path' and no default path set");
         return 1;
     }
-    let vals: Vec<&str> = args.values_of("command").unwrap().collect();
+
+    let vals: Vec<_> = args.values_of_os("command").unwrap().collect();
+
     let env: Vec<&str> = args
         .values_of("env")
         .map_or_else(Vec::new, |matches| matches.collect());
