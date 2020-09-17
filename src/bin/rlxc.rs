@@ -52,7 +52,7 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Missing required argument: 'path' and no default path set");
     }
 
-    let vals: Vec<&str> = match args.values_of("command") {
+    let vals: Vec<_> = match args.values_of_os("command") {
         None => Vec::new(),
         Some(v) => v.collect(),
     };
@@ -150,9 +150,11 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
         eprintln!("Missing required argument: 'path' and no default path set");
         return 1;
     }
-    let vals: Vec<&str> = args.values_of("command").unwrap().collect();
-    let env: Vec<&str> = args
-        .values_of("env")
+
+    let vals: Vec<_> = args.values_of_os("command").unwrap().collect();
+
+    let env: Vec<_> = args
+        .values_of_os("env")
         .map_or_else(Vec::new, |matches| matches.collect());
 
     if let Err(err) = initialize_log("exec", args) {
@@ -176,7 +178,15 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
 
     let mut options = lxc::AttachOptions::new();
     for e in env {
-        let res: Vec<_> = e.splitn(2, '=').collect();
+        let s = match e.to_str() {
+            Some(v) => v,
+            None => {
+                eprintln!("Failed to convert to UTF-8 string");
+                return 1;
+            }
+        };
+
+        let res: Vec<_> = s.splitn(2, '=').collect();
         if res.len() != 2 {
             eprintln!("Invalid environment variable");
             return 1;

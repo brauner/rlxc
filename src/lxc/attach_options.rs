@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
-use std::ffi::{CString, NulError};
+use std::ffi::{CString, NulError, OsStr};
 use std::os::raw::{c_char, c_int, c_long};
 use std::os::unix::io::AsRawFd;
 use std::ptr;
@@ -197,10 +197,13 @@ impl<'t, 'u, 'v, 'w> AttachOptions<'t, 'u, 'v, 'w> {
         }
     }
 
-    pub fn set_env_var(
+    pub fn set_env_var<
+        S: std::fmt::Display + AsRef<OsStr>,
+        T: std::fmt::Display + AsRef<OsStr>,
+    >(
         mut self,
-        name: &str,
-        value: &str,
+        name: S,
+        value: T,
     ) -> Result<Self, NulError> {
         self.extra_env_vars
             .push(CString::new(format!("{}={}", name, value))?);
