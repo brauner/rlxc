@@ -153,8 +153,8 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
 
     let vals: Vec<_> = args.values_of_os("command").unwrap().collect();
 
-    let env: Vec<&str> = args
-        .values_of("env")
+    let env: Vec<_> = args
+        .values_of_os("env")
         .map_or_else(Vec::new, |matches| matches.collect());
 
     if let Err(err) = initialize_log("exec", args) {
@@ -178,7 +178,15 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
 
     let mut options = lxc::AttachOptions::new();
     for e in env {
-        let res: Vec<_> = e.splitn(2, '=').collect();
+        let s = match e.to_str() {
+            Some(v) => v,
+            None => {
+                eprintln!("Failed to convert to UTF-8 string");
+                return 1;
+            }
+        };
+
+        let res: Vec<_> = s.splitn(2, '=').collect();
         if res.len() != 2 {
             eprintln!("Invalid environment variable");
             return 1;
