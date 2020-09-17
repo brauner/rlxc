@@ -52,7 +52,7 @@ fn cmd_start(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Missing required argument: 'path' and no default path set");
     }
 
-    let vals: Vec<&str> = match args.values_of("command") {
+    let vals: Vec<_> = match args.values_of_os("command") {
         None => Vec::new(),
         Some(v) => v.collect(),
     };

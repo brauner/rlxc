@@ -125,10 +125,11 @@ impl Lxc {
 
     /// Attempt to start the container. If `stub` is true, the container's
     /// `lxc.execute.cmd` is executed instead of `lxc.init.cmd`.
-    pub fn start(&self, stub: bool, argv: Vec<&str>) -> Result<(), Error> {
+    pub fn start(&self, stub: bool, argv: Vec<&OsStr>) -> Result<(), Error> {
         let useinit = if stub { 1 } else { 0 };
+
         let cargv: Vec<_> =
-            argv.iter().map(|arg| CString::new(*arg).unwrap()).collect();
+            argv.iter().map(|arg| arg.to_c_string().unwrap()).collect();
         let mut args: Vec<_> = cargv.iter().map(|arg| arg.as_ptr()).collect();
         if !args.is_empty() {
             args.push(std::ptr::null());
