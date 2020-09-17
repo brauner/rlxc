@@ -137,7 +137,6 @@ impl Drop for StringArrayIter {
 /// This trait connects all those missing paths for the most common types. Use
 /// it as:
 ///
-/// ```
 /// use rlxc::util::ffi::ToCString;
 ///
 /// fn foo<T: ?Sized + ToCString>(path: &T) -> Result<()> {
@@ -145,7 +144,6 @@ impl Drop for StringArrayIter {
 ///     unsafe { c_function(cpath.as_ptr()) };
 ///     Ok(())
 /// }
-/// ```
 pub trait ToCString {
     fn to_c_string(&self) -> Result<Cow<CStr>, NulError>;
 }
