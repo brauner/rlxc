@@ -161,4 +161,24 @@ pub fn build_cli() -> App<'static, 'static> {
                         .required(false),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("freeze")
+                .about("Freeze LXC containers")
+                .arg(
+                    Arg::with_name("name")
+                        .index(1)
+                        .help("Name of the container")
+                        .required(false),
+                )
+        )
+        .subcommand(
+            SubCommand::with_name("unfreeze")
+                .about("Unfreeze LXC containers")
+                .arg(
+                    Arg::with_name("name")
+                        .index(1)
+                        .help("Name of the container")
+                        .required(false),
+                )
+        )
 }

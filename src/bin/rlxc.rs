@@ -239,6 +239,48 @@ fn cmd_exec(args: &clap::ArgMatches) -> i32 {
     }
 }
 
+fn cmd_freeze(args: &clap::ArgMatches) -> Result<(), Error> {
+    let sname = args.value_of_os("name").unwrap_or_else(|| "".as_ref());
+
+    let spath = args
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
+    if spath.is_empty() {
+        bail!("Missing required argument: 'path' and no default path set");
+    }
+
+    let container = Lxc::new(sname, spath)?;
+
+    may_control_container(&container)?;
+
+    if !container.is_running() {
+        bail!("Container not running");
+    }
+
+    container.freeze()
+}
+
+fn cmd_unfreeze(args: &clap::ArgMatches) -> Result<(), Error> {
+    let sname = args.value_of_os("name").unwrap_or_else(|| "".as_ref());
+
+    let spath = args
+        .value_of_os("path")
+        .unwrap_or_else(|| lxc::get_default_path().as_ref());
+    if spath.is_empty() {
+        bail!("Missing required argument: 'path' and no default path set");
+    }
+
+    let container = Lxc::new(sname, spath)?;
+
+    may_control_container(&container)?;
+
+    if !container.is_running() {
+        bail!("Container not running");
+    }
+
+    container.unfreeze()
+}
+
 fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
     let spath = args
         .value_of_os("path")
@@ -331,6 +373,8 @@ fn main() {
         ("stop", Some(args)) => do_cmd("stop", args, cmd_stop),
         ("list", Some(args)) => do_cmd("list", args, cmd_list),
         ("login", Some(args)) => do_cmd("login", args, cmd_login),
+        ("freeze", Some(args)) => do_cmd("freeze", args, cmd_freeze),
+        ("unfreeze", Some(args)) => do_cmd("unfreeze", args, cmd_unfreeze),
         ("exec", Some(args)) => exit(cmd_exec(args)),
         _ => {
             println!("{}", matches.usage());

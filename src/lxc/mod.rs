@@ -326,4 +326,22 @@ impl Lxc {
         }
         Ok(())
     }
+
+    /// Freeze a running container.
+    pub fn freeze(&self) -> Result<(), Error> {
+        let frozen = unsafe { (*self.handle).freeze.unwrap()(self.handle) };
+        if !frozen {
+            bail!("failed to freeze container");
+        }
+        Ok(())
+    }
+
+    /// Unfreeze a running container.
+    pub fn unfreeze(&self) -> Result<(), Error> {
+        let thawed = unsafe { (*self.handle).unfreeze.unwrap()(self.handle) };
+        if !thawed {
+            bail!("failed to unfreeze container");
+        }
+        Ok(())
+    }
 }
