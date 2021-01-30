@@ -249,15 +249,40 @@ fn cmd_freeze(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Missing required argument: 'path' and no default path set");
     }
 
-    let container = Lxc::new(sname, spath)?;
+    let all = args.is_present("all");
 
-    may_control_container(&container)?;
-
-    if !container.is_running() {
-        bail!("Container not running");
+    if !all && sname.is_empty() {
+        bail!("Either a single container or all containers must be stopped");
     }
 
-    container.freeze()
+    let freeze_function = |name| {
+        let container = Lxc::new(name, spath)?;
+
+        may_control_container(&container)?;
+
+        if !container.is_running() {
+            println!("Container {:?} not running", name);
+            return Ok(());
+        }
+
+        container.freeze()
+    };
+
+    if !all {
+        return freeze_function(sname);
+    }
+
+    let bulk: Vec<String> = lxc::list_all_containers(spath)?.collect();
+    let errors: Vec<_> = bulk
+        .par_iter()
+        .map(|name| freeze_function(name.as_ref()))
+        .filter_map(Result::err)
+        .collect();
+
+    if !errors.is_empty() {
+        bail!("Failed to freeze some containers");
+    }
+    Ok(())
 }
 
 fn cmd_unfreeze(args: &clap::ArgMatches) -> Result<(), Error> {
@@ -270,15 +295,40 @@ fn cmd_unfreeze(args: &clap::ArgMatches) -> Result<(), Error> {
         bail!("Missing required argument: 'path' and no default path set");
     }
 
-    let container = Lxc::new(sname, spath)?;
+    let all = args.is_present("all");
 
-    may_control_container(&container)?;
-
-    if !container.is_running() {
-        bail!("Container not running");
+    if !all && sname.is_empty() {
+        bail!("Either a single container or all containers must be stopped");
     }
 
-    container.unfreeze()
+    let unfreeze_function = |name| {
+        let container = Lxc::new(name, spath)?;
+
+        may_control_container(&container)?;
+
+        if !container.is_running() {
+            println!("Container {:?} not running", name);
+            return Ok(());
+        }
+
+        container.unfreeze()
+    };
+
+    if !all {
+        return unfreeze_function(sname);
+    }
+
+    let bulk: Vec<String> = lxc::list_all_containers(spath)?.collect();
+    let errors: Vec<_> = bulk
+        .par_iter()
+        .map(|name| unfreeze_function(name.as_ref()))
+        .filter_map(Result::err)
+        .collect();
+
+    if !errors.is_empty() {
+        bail!("Failed to unfreeze some containers");
+    }
+    Ok(())
 }
 
 fn cmd_list(args: &clap::ArgMatches) -> Result<(), Error> {
