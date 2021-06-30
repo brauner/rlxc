@@ -14,16 +14,16 @@ fn main() {
     // to bindgen, and lets you build up options for
     // the resulting bindings.
     let bindings = bindgen::Builder::default()
-        .whitelist_function("list_all_containers")
-        .whitelist_function("lxc_container_new")
-        .whitelist_function("lxc_container_put")
-        .whitelist_function("lxc_get_version")
-        .whitelist_function("lxc_get_global_config_item")
-        .whitelist_function("lxc_log_init")
-        .whitelist_type("lxc_container")
-        .whitelist_type("lxc_log")
-        .whitelist_var("LXC_ATTACH_TERMINAL")
-        .whitelist_var("LXC_ATTACH_DEFAULT")
+        .allowlist_function("list_all_containers")
+        .allowlist_function("lxc_container_new")
+        .allowlist_function("lxc_container_put")
+        .allowlist_function("lxc_get_version")
+        .allowlist_function("lxc_get_global_config_item")
+        .allowlist_function("lxc_log_init")
+        .allowlist_type("lxc_container")
+        .allowlist_type("lxc_log")
+        .allowlist_var("LXC_ATTACH_TERMINAL")
+        .allowlist_var("LXC_ATTACH_DEFAULT")
         // The input header we would like to generate
         // bindings for.
         .header("wrapper.h")
